@@ -1,6 +1,10 @@
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
+
+% page setup
 \usepackage[letterpaper]{geometry}
+\addtolength{\topmargin}{-0.7in}
+\addtolength{\textheight}{1.8in}
 
 \title{\bfseries%
 Don't interpolate your data!}
@@ -14,14 +18,16 @@ Don't interpolate your data!}
 
 \begin{abstract}\noindent
 When there are many observations of an astronomical source---many images with different dithers, or many spectra taken at different barycentric velocities---it is often tempting to shift and stack the data, to (for example) make a high signal-to-noise average image or mean spectrum.
-Bound-saturating measurements are made not by manipulating data, but instead by optimizing (or otherwise using) likelihood functions, where the data are treated as fixed, and the model is modified to fit the data.
-The shifting and stacking of data can be simply converted into a model-fitting procedure, at small additional computational cost.
+Bound-saturating measurements are made not by manipulating data, but instead by optimizing (or otherwise using) 
+a likelihood function, where the data are treated as fixed, and model parameters are modified to fit the data.
+Traditional shifting and stacking of data can be converted into a model-fitting procedure, such that no data are ever harmed.
 The key component of this conversion is a spectral model that is a continuous function of wavelength (or position in the case of imaging) that can represent the psf- and pixel-convolved signal being measured by the device after any reasonable translation.
-The advantages of a modeling approach are myriad:
+The benefits of a modeling approach are myriad:
 The sacred and expensive data never have to be interpolated or otherwise modified.
 Noise maps, data gaps, and bad-data masks, none of which can easily be interpolated, don't have to be manipulated either.
 The simplest model-fitting procedure, like the original shift-and-add procedure, is linear in the data, so noise propagation is straightforward.
-We demonstrate all these things with toy data and we provide open-source sample code for re-use.
+The only cost is a small increase in computational complexity.
+We demonstrate all these things with toy data; we provide open-source sample code for re-use.
 \end{abstract}
 
 \section{Introduction}
@@ -34,7 +40,7 @@ Hello World!
 
 \paragraph{Noise model:}
 
-\paragraph{Bad-pixel mosk:}
+\paragraph{Bad-pixel mask:}
 
 \paragraph{Data gaps:}
 
@@ -52,6 +58,12 @@ Hello World!
 
 \paragraph{Time variability:}
 
-\paragraph{Sky, tellurics, flat-field:}
+\paragraph{Sky, tellurics, flat-field, calibration:}
+
+\section{Method}
+
+\section{Toy experiments and results}
+
+\section{Discussion}
 
 \end{document}
