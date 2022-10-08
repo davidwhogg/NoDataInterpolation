@@ -13,7 +13,7 @@
 
 \title{\bfseries%
 Don't interpolate your data!}
-\author{Hogg, Casey, Daunt, others?}
+\author{Hogg, Casey, others?}
 \date{October 2022}
 
 \sloppy\sloppypar\raggedbottom\frenchspacing
@@ -41,6 +41,7 @@ Things to emphasize here and below:
 \item The input--output relationship of this modeling approach is identical to the input--output relationship of the shift-and-coadd approach. It is just better.
 \item People have a lot of hangups about the word ``model''. We have to use another word, or be very very careful how we use this word.
 \item We have to explain why and how we are better than other approaches in terms that people care about (like radial-velocity precision and abundances etc).
+\item All this is even more important in ill-sampled contexts than well-sampled contexts. See, for example, \textsl{APOGEE} raw data!
 \item We should choose a rigid terminology and stick to it here. HOGG is currently liking ``combined spectrum'' for the model expectation.
 \end{itemize}
 
@@ -116,7 +117,7 @@ More on this below.
 Because of considerations related to the Nyquist frequency on a uniform grid, it is valuable for a spectrograph to have a pixel spacing on the device that is smaller than the width of the PCLSF.
 Specifically, it is valuable for there to be two or three pixels across the full-width at half-maximum (FWHM) of the PCLSF.
 This keeps the band-limited part of the spectroscopic signal well-sampled in the data.
-Spectrographs that don't have pixel scales this fine sometimes do clever things to dither \cite{apogeehardware}.
+There are spectrograph that don't have pixel scales this fine \cite{apogeehardware}; in these cases what we are proposing here is even more important than it is in the well-sampled case.
 
 \paragraph{Non-uniform fast Fourier transform}
 In the special case that the spectral model is a Fourier series, there are very useful and fast tools for interpolation, including especially the non-uniform fast Fourier transform (for example, \cite{finufft}).
@@ -191,10 +192,20 @@ What about non-Gaussian noise?
 
 What about data from different instruments with different LSFs / PSFs? What about data with different pixel scales?
 
+\paragraph{Software}
+\texttt{numpy} \cite{numpy} ---
+\texttt{finufft} \cite{finufft} ---
+\texttt{matplotlib} \cite{matplotlib}.
+
+\paragraph{Facilities}
+
 \paragraph{Acknowledgements}
 It is a pleasure to thank
+Matt Daunt (NYU),
 Adrian Price-Whelan (Flatiron),
 and the Astronomical Data Group at the Flatiron Institute,
 for valuable discussions.
+
+HOGG: SDSS ACK?
 
 \end{document}
