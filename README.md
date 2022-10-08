@@ -5,6 +5,7 @@ advice to the spectroscopists
 - **David W Hogg** (NYU) (MPIA) (Flatiron)
 - **Andy Casey** (Monash)
 - **Matt Daunt** (NYU)
+- **Adrian Price-Whelan** (Flatiron)
 
 ## License:
 Copyright 2022 the authors. All rights reserved, for now.
