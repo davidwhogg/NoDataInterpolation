@@ -1,5 +1,6 @@
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
+\usepackage{amsmath}
 
 % page and document setup
 \usepackage[letterpaper]{geometry}
@@ -22,20 +23,26 @@ Don't interpolate your data!}
 
 \paragraph{Abstract}
 When there are many observations of an astronomical source---many images with different dithers, or many spectra taken at different barycentric velocities---it is often tempting to shift and stack the data, to (for example) make a high signal-to-noise average image or mean spectrum.
-Bound-saturating measurements are made not by manipulating data, but instead by optimizing (or otherwise using) 
-a likelihood function, where the data are treated as fixed, and model parameters are modified to fit the data.
-Traditional shifting and stacking of data can be converted into a model-fitting procedure, such that no data are ever harmed.
-The key component of this conversion is a spectral model that is a continuous function of wavelength (or position in the case of imaging) that can represent the psf- and pixel-convolved signal being measured by the device after any reasonable translation.
+Bound-saturating measurements are made not by manipulating data, but instead by manipulating a likelihood function, where the data are treated as fixed, and model parameters are modified to fit the data.
+Traditional shifting and stacking of data can be converted into a model-fitting procedure, such that no data are ever harmed, and yet the output is the shift-adjusted mean spectrum.
+The key component of this conversion is a spectral model that is completely flexible but also a continuous function of wavelength (or position in the case of imaging) that can represent any signal being measured by the device after any reasonable translation.
 The benefits of a modeling approach are myriad:
-The sacred and expensive data never have to be interpolated or otherwise modified.
-Noise maps, data gaps, and bad-data masks, none of which can easily be interpolated, don't have to be manipulated either.
-The simplest model-fitting procedure, like the original shift-and-add procedure, is linear in the data, so noise propagation is straightforward.
+The sacred data never have to be interpolated or otherwise modified.
+Noise maps, data gaps, and bad-data masks, none of which can easily be interpolated, don't have to be manipulated.
+The procedure is linear in the data, so noise propagation is straightforward.
+The output can take the form of a spectrum evaluated on a pixel grid, as is expected by the spectroscopic community.
 The only cost is a small increase in computational complexity.
-We demonstrate all these things with toy data; we provide open-source sample code for re-use.
+We demonstrate all these things with both toy and real data; we provide open-source sample code for re-use.
 
 \section{Introduction}
 
-Hello World!
+Things to emphasize here and below:
+\begin{itemize}
+\item The input--output relationship of this modeling approach is identical to the input--output relationship of the shift-and-coadd approach. It is just better.
+\item People have a lot of hangups about the word ``model''. We have to use another word, or be very very careful how we use this word.
+\item We have to explain why and how we are better than other approaches in terms that people care about (like radial-velocity precision and abundances etc).
+\item We should choose a rigid terminology and stick to it here. HOGG is currently liking ``combined spectrum'' for the model expectation.
+\end{itemize}
 
 \section{Concepts and assumptions}
 
@@ -127,6 +134,25 @@ In particular, we will assume that the images or spectra have been bias-correcte
 
 \section{Method}
 
+The problem set-up is that there are $N$ spectral measurements $y_i$ (with $1\leq i\leq N$), each of which is a $M_i$-pixel list of intensities (fluxes maybe).
+Different observations $i$ might have different numbers $M_i$ of pixels.
+The $M_i$ pixels are associated with an $M_i$-length list of positions (wavelengths or log-wavelengths) $x_i$.
+Each measurement or observation $i$ is shifted by a shift operator $\Delta x_i$, which can be thought of as a length-$M_i$ list of pixel offsets or shifts, such that the ``rest frame'' or ``unshifted'' positions corresponding to the length-$M_i$ list of data $y_i$ is the list of differences $x_i - \Delta x_i$.
+The goal is to get a combined spectrum that represents the mean of these spectra, in the common rest frame.
+
+The spectral expectation model $f(x;\theta)$, which will be a representation for our combined spectrum, is a function of $x$ controlled by a list $\theta$ of $P$ linear parameters $a_j$ (with $1\leq j\leq P$).
+This function will be very flexible; possibly even an interpolation of control points or a Fourier series; the number $P$ will be roughly the number of pixels we want in our output combined spectrum.
+The statistical model underlying can be expressed qualitatively as
+\begin{align}
+    y_i &= f(x_i + \Delta x_i;\theta) + \mbox{noise} \\
+    f(x;\theta) &= \sum_{j=1}^P a_j\,g_j(x) ~,
+\end{align}
+where we are being a bit loose with terminology (since $x_i$ is a set of positions, not just one position), the noise is additive (but not yet specified), and each of the $P$ functions $g_j(x)$ is a basis function of the representation.
+
+HOGG: NOISE MODEL
+
+HOGG: BASIS FUNCTIONS.
+
 \section{Toy experiments and results}
 
 \section{Discussion}
@@ -145,5 +171,11 @@ Another way involves ignoring it and just getting the average anyway!
 What about non-Gaussian noise?
 
 What about data from different instruments with different LSFs / PSFs? What about data with different pixel scales?
+
+\paragraph{Acknowledgements}
+It is a pleasure to thank
+Adrian Price-Whelan (Flatiron),
+and the Astronomical Data Group at the Flatiron Institute
+for valuable discussions.
 
 \end{document}
