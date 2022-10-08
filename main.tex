@@ -149,11 +149,30 @@ The statistical model underlying can be expressed qualitatively as
 \end{align}
 where we are being a bit loose with terminology (since $x_i$ is a set of positions, not just one position), the noise is additive (but not yet specified), and each of the $P$ functions $g_j(x)$ is a basis function of the representation.
 
-HOGG: NOISE MODEL
+The noise model is additive (as noted above) and we will assume that the noise contributing to observation $y_i$ is zero-mean and Gaussian, with a known $M_i\times M_i$ variance tensor $C_i$ (or its inverse $C_i^{-1}$).
+If the raw pixel measurements are independent, which they often are (and are often assumed to be), then the $C_i$ (or $C_i^{-1}$) matrices will be diagonal matrices with the individual pixel variances (or inverse variances) down the diagonals.
+In many cases you don't know (or aren't provided with) the individual pixel variances, and you are just co-adding data with uniform weights.
+That choice, for our purposes, is equivalent to setting every inverse variance matrix $C_i^{-1}$ to the $M_i\times M_i$ identity matrix.
+That's permitted!
+It is no worse a choice than it was (in the past) when you averaged your input data without thinking about noise variances or weights.
+Another sensible default choice would be to set each inverse matrix $C_i^{-1}$ to the identity times the exposure time, such that the eventual math we do will weight the data by the exposure times.
+That is, you do not need to know the noise variances accurately (or even at all) to execute the forthcoming procedure; but if you do know them, it is good to use them.
+
+If you additionally have a bad-pixel mask $b_i$ associated with each observation $y_i$, the bad-pixel mask can be used simply to zero out the corresponding bad rows and columns of the inverse covariance matrix $C_i^{-1}$.
+Importantly, the bad data get zeros in the \emph{inverse} covariance matrix, not the covariance matrix!
 
 HOGG: BASIS FUNCTIONS.
 
-\section{Toy experiments and results}
+HOGG: LINEAR ALGEBRA.
+
+HOGG: WHAT TO REPORT BACK TO THE USER?
+
+\paragraph{Implementation notes}
+Don't actually construct the very sparse $C_i$ matrices.
+Don't use \texttt{inv()}, use \texttt{solve()}.
+Check your condition numbers.
+
+\section{Experiments and results}
 
 \section{Discussion}
 
@@ -175,7 +194,7 @@ What about data from different instruments with different LSFs / PSFs? What abou
 \paragraph{Acknowledgements}
 It is a pleasure to thank
 Adrian Price-Whelan (Flatiron),
-and the Astronomical Data Group at the Flatiron Institute
+and the Astronomical Data Group at the Flatiron Institute,
 for valuable discussions.
 
 \end{document}
