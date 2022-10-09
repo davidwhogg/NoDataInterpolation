@@ -39,7 +39,7 @@ We demonstrate all these things with both toy and real data; we provide open-sou
 Things to emphasize here and below:
 \begin{itemize}
 \item The input--output relationship of this modeling approach is identical to the input--output relationship of the shift-and-coadd approach. It is just better.
-\item People have a lot of hangups about the word ``model''. We have to use another word, or be very very careful how we use this word.
+\item People have a lot of hangups about the word ``model''. We have to use another word, or be very very careful how we use this word. For instance, some people I talked to about this thought I meant a physical model of the spectrum starting with atomic physics!
 \item We have to explain why and how we are better than other approaches in terms that people care about (like radial-velocity precision and abundances etc).
 \item All this is even more important in ill-sampled contexts than well-sampled contexts. See, for example, \textsl{APOGEE} raw data!
 \item We should choose a rigid terminology and stick to it here. HOGG is currently liking ``combined spectrum'' for the model expectation.
@@ -162,9 +162,29 @@ That is, you do not need to know the noise variances accurately (or even at all)
 If you additionally have a bad-pixel mask $b_i$ associated with each observation $y_i$, the bad-pixel mask can be used simply to zero out the corresponding bad rows and columns of the inverse covariance matrix $C_i^{-1}$.
 Importantly, the bad data get zeros in the \emph{inverse} covariance matrix, not the covariance matrix!
 
-HOGG: BASIS FUNCTIONS.
+HOGG: CHOICE OF BASIS FUNCTION. BAND LIMIT. ETC.
 
-HOGG: LINEAR ALGEBRA.
+Now for the method:
+We stack all of the observations $y_i$ into one huge $M$-pixel list $Y$, where $M=\sum_{i=1}^N M_i$.
+We make a $M\times M$ block-diagonal matrix $C^{-1}$ from all the individual inverse variance matrices $C_i^{-1}$.
+We make a $M\times P$ design matrix $X$ which is the evaluation of all the $P$ basis functions at all the pixel locations in all of the $x_i$.
+Once we have these things, the best-fit parameters $\hat\theta$ are
+\begin{align}
+    \hat\theta &= (X^\top\,C^{-1}\,X)^{-1}\,X^\top\,C^{-1}\,Y ~,
+\end{align}
+which is the maximum-likelihood or minimum-chi-squared solution for a linear weighted least squares problem or a linear model with Gaussian noise (see, for example, \cite{hoggfitting}).
+And now if we choose a final (uniform, say) output pixel grid $x^\star$ in the rest-frame (unshifted) wavelength space, the combined (output, maybe?) spectrum is just
+\begin{align}
+    y^\star &= X^\star\,\hat\theta ~,
+\end{align}
+where $X^\star$ is the evaluation of all of the $P$ basis functions at the locations of the pixels in the output-spectrum pixel grid $x^\star$.
+Putting these things together, the output spectrum $y^\star$ can be thought of as just a kind of linear shifting-and-averaging operation on the input spectra $y_i$ (which have been packed into $Y$ according to
+\begin{align}
+    y^\star &= A\,Y \\
+    A &\equiv X^\star\,(X^\top\,C^{-1}\,X)^{-1}\,X^\top\,C^{-1} ~.
+\end{align}
+That is, the method we are delivering is a linear combination of the input data, just like traditional interpolate-and-average.
+But our method never involves, not even implicitly, shifting or interpolating the input data.
 
 HOGG: WHAT TO REPORT BACK TO THE USER?
 
@@ -172,6 +192,7 @@ HOGG: WHAT TO REPORT BACK TO THE USER?
 Don't actually construct the very sparse $C_i$ matrices.
 Don't use \texttt{inv()}, use \texttt{solve()}.
 Check your condition numbers.
+If $X$ is either very sparse (as it is in a b-spline basis) or Fourier (as it is in a sine-and-cosine basis) then there are very fast ways to do the linear algebra.
 
 \section{Experiments and results}
 
