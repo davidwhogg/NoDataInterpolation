@@ -30,7 +30,7 @@ The benefits of a modeling approach are myriad:
 The sacred data never have to be interpolated or otherwise modified.
 Noise maps, data gaps, and bad-data masks, none of which can easily be interpolated, don't have to be manipulated.
 The procedure is linear in the data, so noise propagation is straightforward.
-The output can take the form of a spectrum evaluated on a pixel grid, as is expected by the spectroscopic community.
+The output can take the form of a spectrum evaluated on a pixel grid, as is often expected by the user.
 The only cost is a small increase in computational complexity.
 We demonstrate all these things with both toy and real data; we provide open-source sample code for re-use.
 
@@ -162,7 +162,16 @@ That is, you do not need to know the noise variances accurately (or even at all)
 If you additionally have a bad-pixel mask $b_i$ associated with each observation $y_i$, the bad-pixel mask can be used simply to zero out the corresponding bad rows and columns of the inverse covariance matrix $C_i^{-1}$.
 Importantly, the bad data get zeros in the \emph{inverse} covariance matrix, not the covariance matrix!
 
-HOGG: CHOICE OF BASIS FUNCTION. BAND LIMIT. ETC.
+Because we are often dealing with a spectrograph with a (fairly) well defined spectral resolution ($\delta\lambda/\lambda$ roughly constant), and because we care a lot about Doppler shifts (which are uniform in log wavelength), it makes sense to think of the pixel positions $x_i$ and shifts $\Delta x_i$ as being in log-wavelength (or ln-wavelength) units.
+Indeed, the \textsl{Sloan Digital Sky Survey} family of spectrographs extract one-dimensional spectra on a uniform-in-log-wavelength basis.
+Once that choice is made, there are still many choices for the linear basis,
+which include canonical functions from interpolation bases, wavelets, and Fourier series.
+In what follows, somewhat arbitrarily, we will use a Fourier basis, which can be expressed as follows:
+\begin{align}
+    g_j(x) & = \left\{\begin{array}{cl}\displaystyle\cos\left(\frac{\pi\,[j-1]}{L}\,x\right) & \mbox{for $j$ odd} \\[3ex]
+                                       \displaystyle\sin\left(\frac{\pi\,j}{L}\,x\right) & \mbox{for $j$ even}\end{array}\right. ~,
+\end{align}
+where $L$ is a (long) length-scale in the $x$ space (the log-wavelength space).
 
 Now for the method:
 We stack all of the observations $y_i$ into one huge $M$-pixel list $Y$, where $M=\sum_{i=1}^N M_i$.
@@ -175,16 +184,25 @@ Once we have these things, the best-fit parameters $\hat\theta$ are
 which is the maximum-likelihood or minimum-chi-squared solution for a linear weighted least squares problem or a linear model with Gaussian noise (see, for example, \cite{hoggfitting}).
 And now if we choose a final (uniform, say) output pixel grid $x^\star$ in the rest-frame (unshifted) wavelength space, the combined (output, maybe?) spectrum is just
 \begin{align}
-    y^\star &= X^\star\,\hat\theta ~,
+    y^\star &= X_\star\,\hat\theta ~,
 \end{align}
-where $X^\star$ is the evaluation of all of the $P$ basis functions at the locations of the pixels in the output-spectrum pixel grid $x^\star$.
-Putting these things together, the output spectrum $y^\star$ can be thought of as just a kind of linear shifting-and-averaging operation on the input spectra $y_i$ (which have been packed into $Y$ according to
+where $X_\star$ is the evaluation of all of the $P$ basis functions at the locations of the pixels in the output-spectrum pixel grid $x^\star$.
+Putting these things together, the output spectrum $y^\star$ can be thought of as just a kind of linear shifting-and-averaging operation on the input spectra $y_i$ (which have been packed into $Y$) according to
 \begin{align}
     y^\star &= A\,Y \\
-    A &\equiv X^\star\,(X^\top\,C^{-1}\,X)^{-1}\,X^\top\,C^{-1} ~.
+    A &\equiv X_\star\,(X^\top\,C^{-1}\,X)^{-1}\,X^\top\,C^{-1} ~.
 \end{align}
 That is, the method we are delivering is a linear combination of the input data, just like traditional interpolate-and-average.
 But our method never involves, not even implicitly, shifting or interpolating the input data.
+
+The uncertainty on the combined spectrum $y^\star$ can be estimated in a few ways.
+The information-theoretic answer is that the covariance matrix $C_\star$ delivering the uncertainties on $y^\star$ is
+\begin{align}
+    C_\star &= [X_\star\,(X^\top\,C^{-1}\,X)^{-1}\,X_\star^\top]^{-1} ~.
+\end{align}
+The naive uncertainty variances are the diagonals of this matrix (and not the inverses of the diagonals of its inverse).
+But, \emph{very importantly}, this is only a correct usage when the input $C_i$ matrices really represented the true uncertainties going in.
+If you have any concerns about that, then it is way safer to get your uncertainty estimates from bootstrap or jackknife \cite{hoggflexible}.
 
 HOGG: WHAT TO REPORT BACK TO THE USER?
 
@@ -193,6 +211,8 @@ Don't actually construct the very sparse $C_i$ matrices.
 Don't use \texttt{inv()}, use \texttt{solve()}.
 Check your condition numbers.
 If $X$ is either very sparse (as it is in a b-spline basis) or Fourier (as it is in a sine-and-cosine basis) then there are very fast ways to do the linear algebra.
+If you use the nufft, order your frequencies in the way the software wants, and deal with the complex numbers.
+Specific choice of $L$ and $P$ in the Fourier case.
 
 \section{Experiments and results}
 
