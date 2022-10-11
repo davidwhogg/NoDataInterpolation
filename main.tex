@@ -182,21 +182,21 @@ Once we have these things, the best-fit parameters $\hat\theta$ are
     \hat\theta &= (X^\top\,C^{-1}\,X)^{-1}\,X^\top\,C^{-1}\,Y ~,
 \end{align}
 which is the maximum-likelihood or minimum-chi-squared solution for a linear weighted least squares problem or a linear model with Gaussian noise (see, for example, \cite{hoggfitting}).
-And now if we choose a final (uniform, say) output pixel grid $x^\star$ in the rest-frame (unshifted) wavelength space, the combined (output, maybe?) spectrum is just
+And now if we choose a final (uniform, say) output pixel grid $x_\star$ in the rest-frame (unshifted) wavelength space, the combined (output, maybe?) spectrum is just
 \begin{align}
-    y^\star &= X_\star\,\hat\theta ~,
+    y_\star &= X_\star\,\hat\theta ~,
 \end{align}
-where $X_\star$ is the evaluation of all of the $P$ basis functions at the locations of the pixels in the output-spectrum pixel grid $x^\star$.
-Putting these things together, the output spectrum $y^\star$ can be thought of as just a kind of linear shifting-and-averaging operation on the input spectra $y_i$ (which have been packed into $Y$) according to
+where $X_\star$ is the $M_\star\times P$ evaluation of all of the $P$ basis functions at the locations of the $M_\star$ pixels in the output-spectrum pixel grid $x_\star$.
+Putting these things together, the output spectrum $y_\star$ can be thought of as just a kind of linear shifting-and-averaging operation on the input spectra $y_i$ (which have been packed into $Y$) according to
 \begin{align}
-    y^\star &= A\,Y \\
-    A &\equiv X_\star\,(X^\top\,C^{-1}\,X)^{-1}\,X^\top\,C^{-1} ~.
+    y_\star &= A_\star\,Y \\
+    A_\star &\equiv X_\star\,(X^\top\,C^{-1}\,X)^{-1}\,X^\top\,C^{-1} ~.
 \end{align}
 That is, the method we are delivering is a linear combination of the input data, just like traditional interpolate-and-average.
 But our method never involves, not even implicitly, shifting or interpolating the input data.
 
-The uncertainty on the combined spectrum $y^\star$ can be estimated in a few ways.
-The information-theoretic answer is that the covariance matrix $C_\star$ delivering the uncertainties on $y^\star$ is
+The uncertainty on the combined spectrum $y_\star$ can be estimated in a few ways.
+The information-theoretic answer is that the covariance matrix $C_\star$ delivering the uncertainties on $y_\star$ is
 \begin{align}
     C_\star &= [X_\star\,(X^\top\,C^{-1}\,X)^{-1}\,X_\star^\top]^{-1} ~.
 \end{align}
@@ -204,7 +204,9 @@ The naive uncertainty variances are the diagonals of this matrix (and not the in
 But, \emph{very importantly}, this is only a correct usage when the input $C_i$ matrices really represented the true uncertainties going in.
 If you have any concerns about that, then it is way safer to get your uncertainty estimates from bootstrap or jackknife \cite{hoggflexible}.
 
-HOGG: WHAT TO REPORT BACK TO THE USER?
+In the end, most users want the combined spectrum $y_\star$ (plus the pixel positions $x_\star$ and uncertainty informaion).
+Some users will additionally want (or want to reconstruct) the parameters $\hat\theta$ and the basis functions $g_j(x)$.
+For this reasons it often makes sense to set $M_\star\geq P$ such that the delivered $y_\star$ fully determines the parameters.
 
 \paragraph{Implementation notes}
 Don't actually construct the very sparse $C_i$ matrices.
@@ -212,7 +214,7 @@ Don't use \texttt{inv()}, use \texttt{solve()}.
 Check your condition numbers.
 If $X$ is either very sparse (as it is in a b-spline basis) or Fourier (as it is in a sine-and-cosine basis) then there are very fast ways to do the linear algebra.
 If you use the nufft, order your frequencies in the way the software wants, and deal with the complex numbers.
-Specific choice of $L$ and $P$ in the Fourier case.
+Specific choice of $L$ and $P$ and $M_\star$ in the Fourier case.
 
 \section{Experiments and results}
 
