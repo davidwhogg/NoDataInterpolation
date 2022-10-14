@@ -204,19 +204,47 @@ The naive uncertainty variances are the diagonals of this matrix (and not the in
 But, \emph{very importantly}, this is only a correct usage when the input $C_i$ matrices really represented the true uncertainties going in.
 If you have any concerns about that, then it is way safer to get your uncertainty estimates from bootstrap or jackknife \cite{hoggflexible}.
 
-In the end, most users want the combined spectrum $y_\star$ (plus the pixel positions $x_\star$ and uncertainty informaion).
+In the end, most users want the combined spectrum $y_\star$ (plus the pixel positions $x_\star$ and uncertainty information).
 Some users will additionally want (or want to reconstruct) the parameters $\hat\theta$ and the basis functions $g_j(x)$.
-For this reasons it often makes sense to set $M_\star\geq P$ such that the delivered $y_\star$ fully determines the parameters.
+For these reasons it often makes sense to set $M_\star\geq P$ such that the delivered $y_\star$ fully determines the parameters.
+But that's a detailed question about your users and your goals.
 
 \paragraph{Implementation notes}
-Don't actually construct the very sparse $C_i$ matrices.
-Don't use \texttt{inv()}, use \texttt{solve()}.
-Check your condition numbers.
-If $X$ is either very sparse (as it is in a b-spline basis) or Fourier (as it is in a sine-and-cosine basis) then there are very fast ways to do the linear algebra.
+Don't actually construct the very sparse $C_i$ matrices, just do pixel-wise multiplies.
+Don't use \texttt{inv()}, use \texttt{solve()} or \texttt{lstsq()}.
+Check your condition numbers before you go.
+If $X$ is either very sparse (as it is in a b-spline basis) or Fourier (as it is in a sine-and-cosine basis) then there are very fast ways to do the linear algebra; research those.
 If you use the nufft, order your frequencies in the way the software wants, and deal with the complex numbers.
 Specific choice of $L$ and $P$ and $M_\star$ in the Fourier case.
 
 \section{Experiments and results}
+
+\paragraph{Fake data}
+We demonstrate the effectiveness of the spectral combination method on artificial data.
+The spectral data were generated from a mean spectral expectation that is a continuum plus a randomly generated (not at all physical) line list, where each line equivalent width was set by a random draw from a power law.
+Each spectral epoch was given a velocity (Doppler shift) by putting the epochs equally spaced on a sinusoidal variation with a semi-amplitude of $30\,\kmps$ (to emulate the motion of the spectrograph with respect to the Solar System barycenter).
+The data were generated with an assumption of unresolved spectral lines and a Gaussian line-spread function (LSF) by simply evaluating the spectral expectation model at pixel centers, so the LSF is effectively the pixel-convolved LSF.
+The pixel grids were set to slightly under-sample the pixel-convolved LSF, and they were fixed in the rest frame of the spectrograph.
+After sampling the mean spectral expectation model at the pixels, we add Gaussian noise with a uniform variance such that the signal-to-noise in the continuum is XXXX per pixel in each epoch spectrum.
+At a rate of XXX pixels were randomly and independently marked as ``bad'' and offset by a large offset.
+At each epoch $i$, there is a spectrum $y_i$ with $M_i=XXX$ pixels, a spectrograph rest-frame pixel grid $x_i$ (in log wavelength $x$), and a $M_i$-pixel binary bad-pixel mask $b_i$.
+The full data set is shown in Figure~\label{fig:data}.
+
+For the combined spectrum we choose a pixel grid $x_\star$ with $M_\star$ pixels evenly spaced in log wavelength $x$, separated by YYYY, which (just barely) samples the pixel-convolved LSF well.
+We treat every pixel in the data as having the same noise variance $\sigma_y$ (which is indeed how they were generated).
+
+\paragraph{Standard practice}
+HOGG: Choose an interpolator.
+
+HOGG: Interpolate to the $x_\star$ grid and average.
+
+HOGG: Deal with the bad pixels how?
+
+HOGG: Standard practice is way sucky. It is shown in Figure~XX.
+
+\paragraph{Our method HOGG THIS NEEDS A NAME}
+
+We do what we say and show it in Figure~XXX.
 
 \section{Discussion}
 
@@ -227,6 +255,8 @@ What happens if you don't know your shifts?
 What happens if you have multiple shifting signals?
 \texttt{wobble} \cite{wobble} is a solution to one version of that problem.
 
+What happens if your data aren't continuum normalized properly?
+
 Discuss time-variable inputs, and how you would modify to deal with that.
 One way involves modeling the time variability with some process.
 Another way involves ignoring it and just getting the average anyway!
@@ -234,6 +264,8 @@ Another way involves ignoring it and just getting the average anyway!
 What about non-Gaussian noise?
 
 What about data from different instruments with different LSFs / PSFs? What about data with different pixel scales?
+
+Code is available at HOGG THIS URL.
 
 \paragraph{Software}
 \texttt{numpy} \cite{numpy} ---
