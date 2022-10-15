@@ -11,6 +11,11 @@
 % text macros
 \newcommand{\sectionname}{Section}
 
+% math macros
+\newcommand{\unit}[1]{\mathrm{#1}}
+\newcommand{\mps}{\unit{m\,s^{-1}}}
+\newcommand{\kmps}{\unit{km\,s^{-1}}}
+
 \title{\bfseries%
 Don't interpolate your data!}
 \author{Hogg, Casey, others?}
@@ -129,9 +134,11 @@ We interpolate the model to account for the shifts, and we combine data to beat 
 There are situations in which there is substantial time variability and these approaches are still valid, and there are modified approaches.
 We will discuss these changes and generalizations at the end.
 
-\paragraph{Bias, sky, tellurics, flat-field}
+\paragraph{Bias, sky, tellurics, flat-field, normalization}
 In what follows, we will assume that the input data are well calibrated in various ways.
 In particular, we will assume that the images or spectra have been bias-corrected, sky-subtracted, flat-fielded, and tellurics-corrected sufficiently well that the different observations $y_i$ can be seen as observations of the same underlying or intrinsic signal.
+Alternatively, the input data might be continuum-normalized or pseudo-continuum-normalized.
+Again, the assumption is that the different calibrated or processed observations are of the same underlying signal.
 
 \section{Method}
 
@@ -224,11 +231,11 @@ We demonstrate the effectiveness of the spectral combination method on artificia
 The spectral data were generated from a mean spectral expectation that is a continuum plus a randomly generated (not at all physical) line list, where each line equivalent width was set by a random draw from a power law.
 Each spectral epoch was given a velocity (Doppler shift) by putting the epochs equally spaced on a sinusoidal variation with a semi-amplitude of $30\,\kmps$ (to emulate the motion of the spectrograph with respect to the Solar System barycenter).
 The data were generated with an assumption of unresolved spectral lines and a Gaussian line-spread function (LSF) by simply evaluating the spectral expectation model at pixel centers, so the LSF is effectively the pixel-convolved LSF.
-The pixel grids were set to slightly under-sample the pixel-convolved LSF, and they were fixed in the rest frame of the spectrograph.
+The individual pixel grids $x_i$ were set to slightly under-sample the pixel-convolved LSF, and they were fixed in the rest frame of the spectrograph.
 After sampling the mean spectral expectation model at the pixels, we add Gaussian noise with a uniform variance such that the signal-to-noise in the continuum is XXXX per pixel in each epoch spectrum.
 At a rate of XXX pixels were randomly and independently marked as ``bad'' and offset by a large offset.
 At each epoch $i$, there is a spectrum $y_i$ with $M_i=XXX$ pixels, a spectrograph rest-frame pixel grid $x_i$ (in log wavelength $x$), and a $M_i$-pixel binary bad-pixel mask $b_i$.
-The full data set is shown in Figure~\label{fig:data}.
+The full data set is shown in Figure~\label{fig:data}, and a zoom-in on one epoch is shown in \figurename~\ref{fig:datazoom}.
 
 For the combined spectrum we choose a pixel grid $x_\star$ with $M_\star$ pixels evenly spaced in log wavelength $x$, separated by YYYY, which (just barely) samples the pixel-convolved LSF well.
 We treat every pixel in the data as having the same noise variance $\sigma_y$ (which is indeed how they were generated).
@@ -263,7 +270,7 @@ Another way involves ignoring it and just getting the average anyway!
 
 What about non-Gaussian noise?
 
-What about data from different instruments with different LSFs / PSFs? What about data with different pixel scales?
+What about data from different instruments with different LSFs / PSFs? What about data with different pixel scales? What about data with unknown wavelength calibration?
 
 Code is available at HOGG THIS URL.
 
