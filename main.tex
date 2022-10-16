@@ -39,7 +39,7 @@ The output can take the form of a spectrum evaluated on a pixel grid, as is ofte
 The only cost is a small increase in computational complexity.
 We demonstrate all of these things with a small data example and we provide open-source sample code for re-use.
 
-\section{Introduction}
+\section{Introduction}\label{sec:intro}
 
 Things to emphasize here and below:
 \begin{itemize}
@@ -48,9 +48,10 @@ Things to emphasize here and below:
 \item We have to explain why and how we are better than other approaches in terms that people care about (like radial-velocity precision and abundances etc).
 \item All this is even more important in ill-sampled contexts than well-sampled contexts. See, for example, \textsl{APOGEE} raw data!
 \item We should choose a rigid terminology and stick to it here. HOGG is currently liking ``combined spectrum'' for the model expectation.
+\item This model is a sub-model of \textsl{wobble} \cite{wobble}.
 \end{itemize}
 
-\section{Concepts and assumptions}
+\section{Concepts and assumptions}\label{sec:assumptions}
 
 What we do here can apply to almost any astronomical signals, but we are going to specialize to astronomical spectra for specificity.
 We are going to make many other assumptions too, all of which are discussed in this \sectionname.
@@ -140,7 +141,7 @@ In particular, we will assume that the images or spectra have been bias-correcte
 Alternatively, the input data might be continuum-normalized or pseudo-continuum-normalized.
 Again, the assumption is that the different calibrated or processed observations are of the same underlying signal.
 
-\section{Method}
+\section{Method}\label{sec:method}
 
 The problem set-up is that there are $N$ spectral measurements $y_i$ (with $1\leq i\leq N$), each of which is a $M_i$-pixel list of intensities (fluxes maybe).
 Different observations $i$ might have different numbers $M_i$ of pixels.
@@ -224,7 +225,7 @@ If $X$ is either very sparse (as it is in a b-spline basis) or Fourier (as it is
 If you use the nufft, order your frequencies in the way the software wants, and deal with the complex numbers.
 Specific choice of $L$ and $P$ and $M_\star$ in the Fourier case.
 
-\section{Experiments and results}
+\section{Experiments and results}\label{sec:results}
 
 \paragraph{Fake data}
 We demonstrate the effectiveness of the spectral combination method on artificial data.
@@ -254,20 +255,20 @@ Naive interpolation of an integer (binary actually) bad-pixel mask $b_i$ will no
 The conservative move (which we adopt) is to naively interpolate $b_i$ and then zero out any pixels that are significantly below unity.
 In general this substantially grows the binary mask, and reduces the amount of data available for combination.
 
-We show the results of this combintation, for the fake data, in \figurename~\ref{fig:standard}.
+We show the results of Standar Practice (tm), for the fake data, in \figurename~\ref{fig:standard}.
 We also show the comparison with the true spectral expectation model that was employed to make the fake data.
 We find HOGG WHAT??
 
 \paragraph{Our method: The forward model}
 HOGG: OUR METHOD NEEDS A CONSISTENT NAME USED THROUGHOUT. FORWARD MODEL??
 
-The combined spectrum resulting from the method for forward modeling described in \sectionname~\ref{sec:method} is shown in \figurename~\ref{fig:combined}.
+The combined spectrum resulting from the Forward Model (tm) described in \sectionname~\ref{sec:method} is shown in \figurename~\ref{fig:combined}.
 Again, it is compared to the true spectral expectation model.
 We find HOGG WHAT?? HERE SAY ABSOLUTELY WHAT WE FIND.
 
-HOGG: HERE SAY WHAT WE FIND RELATIVELY to the standard practice.
+HOGG: HERE SAY WHAT WE FIND RELATIVELY to Standard Practice (tm).
 
-\section{Discussion}
+\section{Discussion}\label{sec:discussion}
 
 Give some summary of the above.
 
