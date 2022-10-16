@@ -37,7 +37,7 @@ Noise maps, data gaps, and bad-data masks, none of which can easily be interpola
 The procedure is linear in the data, so noise propagation is straightforward.
 The output can take the form of a spectrum evaluated on a pixel grid, as is often expected by the user.
 The only cost is a small increase in computational complexity.
-We demonstrate all these things with both toy and real data; we provide open-source sample code for re-use.
+We demonstrate all of these things with a small data example and we provide open-source sample code for re-use.
 
 \section{Introduction}
 
@@ -241,17 +241,31 @@ For the combined spectrum we choose a pixel grid $x_\star$ with $M_\star$ pixels
 We treat every pixel in the data as having the same noise variance $\sigma_y$ (which is indeed how they were generated).
 
 \paragraph{Standard practice}
-HOGG: Choose an interpolator.
+In standard practice, the individual spectra $y_i$ are interpolated to rest-frame spectra $y'_i$ using an interpolator.
+In detail, the data are shifted and also resampled onto the output pixel grid $x_\star$.
+The interpolator is a choice; cubic spline, Lanczos, and sinc interpolations are common, since they have good properties with respect to the spectrograph band limit.
+Here we choose a cubic spline for convenience ANDY: WHAT SHOULD WE CHOOSE??.
 
-HOGG: Interpolate to the $x_\star$ grid and average.
+The interpolated spectra $y'_i$ are, by construction, all on the same rest-frame wavelength grid $x_\star$ so they can be averaged, with a straight average, a median, an inverse-variance-weighted mean, or any more sophisticated algorithm.
+Here we choose an inverse-variance-weighted mean, but zeroing out the inverse variance at the locations of the bad pixels.
 
-HOGG: Deal with the bad pixels how?
+This censorship of the bad pixels requires some attention:
+Naive interpolation of an integer (binary actually) bad-pixel mask $b_i$ will not deliver an integer mask $b'_i$.
+The conservative move (which we adopt) is to naively interpolate $b_i$ and then zero out any pixels that are significantly below unity.
+In general this substantially grows the binary mask, and reduces the amount of data available for combination.
 
-HOGG: Standard practice is way sucky. It is shown in Figure~XX.
+We show the results of this combintation, for the fake data, in \figurename~\ref{fig:standard}.
+We also show the comparison with the true spectral expectation model that was employed to make the fake data.
+We find HOGG WHAT??
 
-\paragraph{Our method HOGG THIS NEEDS A NAME}
+\paragraph{Our method: The forward model}
+HOGG: OUR METHOD NEEDS A CONSISTENT NAME USED THROUGHOUT. FORWARD MODEL??
 
-We do what we say and show it in Figure~XXX.
+The combined spectrum resulting from the method for forward modeling described in \sectionname~\ref{sec:method} is shown in \figurename~\ref{fig:combined}.
+Again, it is compared to the true spectral expectation model.
+We find HOGG WHAT?? HERE SAY ABSOLUTELY WHAT WE FIND.
+
+HOGG: HERE SAY WHAT WE FIND RELATIVELY to the standard practice.
 
 \section{Discussion}
 
@@ -279,15 +293,11 @@ Code is available at HOGG THIS URL.
 \texttt{finufft} \cite{finufft} ---
 \texttt{matplotlib} \cite{matplotlib}.
 
-\paragraph{Facilities}
-
 \paragraph{Acknowledgements}
 It is a pleasure to thank
 Matt Daunt (NYU),
 Adrian Price-Whelan (Flatiron),
 and the Astronomical Data Group at the Flatiron Institute,
 for valuable discussions.
-
-HOGG: SDSS ACK?
 
 \end{document}
