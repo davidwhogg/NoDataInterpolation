@@ -96,6 +96,8 @@ We consider only the PCLSF, because then the sampling by the detector pixels doe
 That is, when the PCLSF is used to model a spectrum, the projection onto the pixels is just a sampling of the function at the pixel centers, and does not involve any convolution over the face of the pixel.
 All that said, we won't explicitly model or use the PCLSF in what follows; we will just assume that our continuous spectral model is a model for the pixel-convolved, finite-resolution spectrum; we won't be doing any convolutions in comparing models and data.
 
+HOGG: Something about the LSF being different in different exposures!
+
 \paragraph{Continuous spectral model}
 In what follows we are going to avoid interpolating the \emph{data} by having a spectral \emph{model} that can be arbitrarily and losslessly interpolated.
 That means that the spectral model must be a representation of a continuous one-dimensional function.
@@ -241,7 +243,7 @@ The full data set is shown in Figure~\label{fig:data}, and a zoom-in on one epoc
 For the combined spectrum we choose a pixel grid $x_\star$ with $M_\star$ pixels evenly spaced in log wavelength $x$, separated by YYYY, which (just barely) samples the pixel-convolved LSF well.
 We treat every pixel in the data as having the same noise variance $\sigma_y$ (which is indeed how they were generated).
 
-\paragraph{Standard practice}
+\paragraph{Standard Practice (tm)}
 In standard practice, the individual spectra $y_i$ are interpolated to rest-frame spectra $y'_i$ using an interpolator.
 In detail, the data are shifted and also resampled onto the output pixel grid $x_\star$.
 The interpolator is a choice; cubic spline, Lanczos, and sinc interpolations are common, since they have good properties with respect to the spectrograph band limit.
@@ -259,7 +261,7 @@ We show the results of Standar Practice (tm), for the fake data, in \figurename~
 We also show the comparison with the true spectral expectation model that was employed to make the fake data.
 We find HOGG WHAT??
 
-\paragraph{Our method: The forward model}
+\paragraph{Our method: Forward Model (tm)}
 HOGG: OUR METHOD NEEDS A CONSISTENT NAME USED THROUGHOUT. FORWARD MODEL??
 
 The combined spectrum resulting from the Forward Model (tm) described in \sectionname~\ref{sec:method} is shown in \figurename~\ref{fig:combined}.
@@ -278,6 +280,8 @@ What happens if you have multiple shifting signals?
 \texttt{wobble} \cite{wobble} is a solution to one version of that problem.
 
 What happens if your data aren't continuum normalized properly?
+
+How do you modify to deal with LSF variations (like we have in \textsl{SDSS-V APOGEE}?
 
 Discuss time-variable inputs, and how you would modify to deal with that.
 One way involves modeling the time variability with some process.
