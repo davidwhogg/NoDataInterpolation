@@ -32,10 +32,10 @@ Bound-saturating measurements are made not by manipulating data, but instead by 
 Traditional shifting and stacking of data can be converted into a model-fitting procedure, such that no data are ever harmed, and yet the output is the shift-adjusted mean spectrum.
 The key component of this conversion is a spectral model that is completely flexible but also a continuous function of wavelength (or position in the case of imaging) that can represent any signal being measured by the device after any reasonable translation.
 The benefits of a modeling approach are myriad:
-The sacred data never have to be interpolated or otherwise modified.
-Noise maps, data gaps, and bad-data masks, none of which can easily be interpolated, don't have to be manipulated.
-The procedure is linear in the data, so noise propagation is straightforward.
-The output can take the form of a spectrum evaluated on a pixel grid, as is often expected by the user.
+The sacred data never have to be modified.
+Noise maps, data gaps, and bad-data masks don't have to be interpolated.
+The output can take the form of a spectrum evaluated on a pixel grid, as is traditional.
+The noise in the output spectrum becomes uncorrelated across neighboring pixels.
 The only cost is a small increase in computational complexity.
 We demonstrate all of these things with a small data example and we provide open-source sample code for re-use.
 
