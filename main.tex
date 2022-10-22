@@ -6,6 +6,7 @@
 % - Write about the two input-data cases.
 % - See bug list in code for other issues with the text--code relationship (noise model; line-formation model).
 % - Copy in a figure macro from Hogg & Villar and use it.
+% - Deal with all HOGG, ANDY, ARC, XXX, YYY, CITE, etc.
 
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
@@ -263,6 +264,9 @@ The data were generated with an assumption of unresolved spectral lines and a Ga
 The individual pixel grids $x_i$ were set to slightly under-sample the pixel-convolved LSF, and they were fixed in the rest frame of the spectrograph.
 After sampling the mean spectral expectation model at the pixels, we add Gaussian noise with a uniform variance such that the signal-to-noise in the continuum is XXXX per pixel in each epoch spectrum.
 At a rate of XXX pixels were randomly and independently marked as ``bad'' and offset by a large offset.
+
+HOGG: MAKE 2 DATA SETS, one poorly sampled, one well sampled.
+
 At each epoch $i$, there is a spectrum $y_i$ with $M_i=XXX$ pixels, a spectrograph rest-frame pixel grid $x_i$ (in log wavelength $x$), and a $M_i$-pixel binary bad-pixel mask $b_i$.
 The full data set is shown in Figure~\label{fig:data1}, and a zoom-in on one epoch is shown in \figurename~\ref{fig:data2}.
 \begin{figure}[t!]
@@ -270,21 +274,38 @@ The full data set is shown in Figure~\label{fig:data1}, and a zoom-in on one epo
     \includegraphics[width=1.3\figurewidth]{notebooks/data1.pdf}\\
     \includegraphics[width=\figurewidth]{notebooks/datazoom.pdf}
     \end{center}
-    \caption{HOGG: Something.}
-    \label{fig:data1}
+    \caption{The top 8 panels show the $N=8$ epochs of the poorly sampled input data. The bad pixels are indicated with grey bars. The bottom 2 panels show a zoom in on one of the epochs, along with the true spectrum used to generate the data. The true spectrum is shown at zero Doppler shift, while each epoch spectrum is at a finite Doppler shift $\Delta x_i$.\label{fig:data1}}
     \end{mdframed}
 \end{figure}
 \begin{figure}[t!]
     \begin{mdframed}\begin{center}
     \includegraphics[width=1.3\figurewidth]{notebooks/data2.pdf}
     \end{center}
-    \caption{HOGG: Something.}
-    \label{fig:data2}
+    \caption{Similar to the top panels of \figurename~\ref{fig:data1} except showing the well sampled input data.\label{fig:data2}}
     \end{mdframed}
 \end{figure}
 
-For the combined spectrum we choose a pixel grid $x_\star$ with $M_\star$ pixels evenly spaced in log wavelength $x$, separated by YYYY, which (just barely) samples the pixel-convolved LSF well.
+For the combined spectrum we choose a pixel grid $x_\star$ with $M_\star$ pixels evenly spaced in log wavelength $x$, separated by $1/R$, which (just barely) samples the pixel-convolved LSF well.
 We treat every pixel in the data as having the same noise variance $\sigma_y$ (which is indeed how they were generated).
+
+\paragraph{Fiducial case}
+HOGG: OUR METHOD NEEDS A CONSISTENT NAME USED THROUGHOUT. FORWARD MODEL??
+
+HOGG: Give full list of input parameters for the Fiducial.
+
+The combined spectrum resulting from the Forward Model (tm) described in \sectionname~\ref{sec:method} is shown in \figurename~\ref{fig:forward}.
+Again, it is compared to the true spectral expectation model.
+We find HOGG WHAT?? HERE SAY ABSOLUTELY WHAT WE FIND.
+\begin{figure}[t!]
+    \begin{mdframed}\begin{center}
+    \includegraphics[width=\figurewidth]{notebooks/forward1.pdf}\\
+    \includegraphics[width=\figurewidth]{notebooks/forward2.pdf}
+    \end{center}
+    \caption{The top two panels show the result of running the Forward Model (tm) on the poorly sampled input data, plus the residual away from the truth. The bottom two panels show the same but for the well sampled input data. In each panel, the red line shows the true model used to generate the data.\label{fig:forward}}
+    \end{mdframed}
+\end{figure}
+
+HOGG: HERE SAY WHAT WE FIND RELATIVELY to Standard Practice (tm).
 
 \paragraph{Standard Practice (tm)}
 In standard practice, the individual spectra $y_i$ are interpolated to rest-frame spectra $y'_i$ using an interpolator.
@@ -308,30 +329,10 @@ We find HOGG WHAT??
     \includegraphics[width=\figurewidth]{notebooks/standard1.pdf}\\
     \includegraphics[width=\figurewidth]{notebooks/standard2.pdf}
     \end{center}
-    \caption{HOGG: Something.}
+    \caption{Same as \figurename~\ref{fig:forward} but for the output of Standard Practice (tm). Note that the residuals appear to be spatially correlated.}
     \label{fig:standard}
     \end{mdframed}
 \end{figure}
-
-\paragraph{Fiducial case}
-HOGG: OUR METHOD NEEDS A CONSISTENT NAME USED THROUGHOUT. FORWARD MODEL??
-
-HOGG: Give full list of input parameters for the Fiducial.
-
-The combined spectrum resulting from the Forward Model (tm) described in \sectionname~\ref{sec:method} is shown in \figurename~\ref{fig:forward}.
-Again, it is compared to the true spectral expectation model.
-We find HOGG WHAT?? HERE SAY ABSOLUTELY WHAT WE FIND.
-\begin{figure}[t!]
-    \begin{mdframed}\begin{center}
-    \includegraphics[width=\figurewidth]{notebooks/forward1.pdf}\\
-    \includegraphics[width=\figurewidth]{notebooks/forward2.pdf}
-    \end{center}
-    \caption{HOGG: Something.}
-    \label{fig:forward}
-    \end{mdframed}
-\end{figure}
-
-HOGG: HERE SAY WHAT WE FIND RELATIVELY to Standard Practice (tm).
 
 \paragraph{Noise and noise covariances}
 HOGG do repeated trials to empirically measure the noise covariances.
