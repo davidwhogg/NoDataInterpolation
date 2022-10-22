@@ -1,3 +1,12 @@
+% Copyright 2022 David W. Hogg (NYU) and Andy Casey (Monash)
+
+% To-Do items
+% -----------
+% - Audit and fix the sign applied to $\Delta x_i$ everywhere. Wrong relative to code?
+% - Write about the two input-data cases.
+% - See bug list in code for other issues with the text--code relationship (noise model; line-formation model).
+% - Copy in a figure macro from Hogg & Villar and use it.
+
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
@@ -7,6 +16,23 @@
 \addtolength{\topmargin}{-0.7in}
 \addtolength{\textheight}{1.8in}
 \renewcommand{\paragraph}[1]{\medskip\par\noindent\textbf{#1}~---}
+
+% figure setup
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage[framemethod=tikz]{mdframed}
+\usetikzlibrary{shadows}
+\definecolor{captiongray}{HTML}{555555}
+\mdfsetup{%
+  innertopmargin=2ex,
+  innerbottommargin=1.8ex,
+  linecolor=captiongray,
+  linewidth=0.5pt,
+  roundcorner=1pt,
+  shadow=false,
+}
+\newlength{\figurewidth}
+\setlength{\figurewidth}{0.75\textwidth}
 
 % text macros
 \newcommand{\sectionname}{Section}
@@ -238,7 +264,24 @@ The individual pixel grids $x_i$ were set to slightly under-sample the pixel-con
 After sampling the mean spectral expectation model at the pixels, we add Gaussian noise with a uniform variance such that the signal-to-noise in the continuum is XXXX per pixel in each epoch spectrum.
 At a rate of XXX pixels were randomly and independently marked as ``bad'' and offset by a large offset.
 At each epoch $i$, there is a spectrum $y_i$ with $M_i=XXX$ pixels, a spectrograph rest-frame pixel grid $x_i$ (in log wavelength $x$), and a $M_i$-pixel binary bad-pixel mask $b_i$.
-The full data set is shown in Figure~\label{fig:data}, and a zoom-in on one epoch is shown in \figurename~\ref{fig:datazoom}.
+The full data set is shown in Figure~\label{fig:data1}, and a zoom-in on one epoch is shown in \figurename~\ref{fig:data2}.
+\begin{figure}[t!]
+    \begin{mdframed}\begin{center}
+    \includegraphics[width=1.3\figurewidth]{notebooks/data1.pdf}\\
+    \includegraphics[width=\figurewidth]{notebooks/datazoom.pdf}
+    \end{center}
+    \caption{HOGG: Something.}
+    \label{fig:data1}
+    \end{mdframed}
+\end{figure}
+\begin{figure}[t!]
+    \begin{mdframed}\begin{center}
+    \includegraphics[width=1.3\figurewidth]{notebooks/data2.pdf}
+    \end{center}
+    \caption{HOGG: Something.}
+    \label{fig:data2}
+    \end{mdframed}
+\end{figure}
 
 For the combined spectrum we choose a pixel grid $x_\star$ with $M_\star$ pixels evenly spaced in log wavelength $x$, separated by YYYY, which (just barely) samples the pixel-convolved LSF well.
 We treat every pixel in the data as having the same noise variance $\sigma_y$ (which is indeed how they were generated).
@@ -260,25 +303,48 @@ In general this substantially grows the binary mask, and reduces the amount of d
 We show the results of Standard Practice (tm), for the fake data, in \figurename~\ref{fig:standard}.
 We also show the comparison with the true spectral expectation model that was employed to make the fake data.
 We find HOGG WHAT??
+\begin{figure}[t!]
+    \begin{mdframed}\begin{center}
+    \includegraphics[width=\figurewidth]{notebooks/standard1.pdf}\\
+    \includegraphics[width=\figurewidth]{notebooks/standard2.pdf}
+    \end{center}
+    \caption{HOGG: Something.}
+    \label{fig:standard}
+    \end{mdframed}
+\end{figure}
 
 \paragraph{Fiducial case}
 HOGG: OUR METHOD NEEDS A CONSISTENT NAME USED THROUGHOUT. FORWARD MODEL??
 
 HOGG: Give full list of input parameters for the Fiducial.
 
-The combined spectrum resulting from the Forward Model (tm) described in \sectionname~\ref{sec:method} is shown in \figurename~\ref{fig:combined}.
+The combined spectrum resulting from the Forward Model (tm) described in \sectionname~\ref{sec:method} is shown in \figurename~\ref{fig:forward}.
 Again, it is compared to the true spectral expectation model.
 We find HOGG WHAT?? HERE SAY ABSOLUTELY WHAT WE FIND.
+\begin{figure}[t!]
+    \begin{mdframed}\begin{center}
+    \includegraphics[width=\figurewidth]{notebooks/forward1.pdf}\\
+    \includegraphics[width=\figurewidth]{notebooks/forward2.pdf}
+    \end{center}
+    \caption{HOGG: Something.}
+    \label{fig:forward}
+    \end{mdframed}
+\end{figure}
 
 HOGG: HERE SAY WHAT WE FIND RELATIVELY to Standard Practice (tm).
-
-\paragraph{Dependence on raw-data pixel scale}
-HOGG show that things with Standard Practice (tm) depend VERY STRONGLY on the input pixel grid.
 
 \paragraph{Noise and noise covariances}
 HOGG do repeated trials to empirically measure the noise covariances.
 
 Plot the empirical covariances as a function of input-data pixel scale, interpolation method, and number of epochs.
+\begin{figure}[t!]
+    \begin{mdframed}\begin{center}
+    \includegraphics[width=\figurewidth]{notebooks/noise.pdf}
+    \end{center}
+    \caption{HOGG: Something.}
+    \label{fig:noise}
+    \end{mdframed}
+\end{figure}
 
 \section{Discussion}\label{sec:discussion}
 
