@@ -208,7 +208,7 @@ In what follows, somewhat arbitrarily, we will use a Fourier basis, which can be
     g_j(x) & = \left\{\begin{array}{cl}\displaystyle\cos\left(\frac{\pi\,[j-1]}{L}\,x\right) & \mbox{for $j$ odd} \\[3ex]
                                        \displaystyle\sin\left(\frac{\pi\,j}{L}\,x\right) & \mbox{for $j$ even}\end{array}\right. ~,
 \end{align}
-where $L$ is a (long) length-scale in the $x$ space (the log-wavelength space).
+where $L$ is a (long) length-scale in the $x$ space (the log-wavelength space), and $1\leq j\leq P$.
 
 Now for the method:
 We stack all of the observations $y_i$ into one huge $M$-pixel list $Y$, where $M=\sum_{i=1}^N M_i$.
@@ -261,11 +261,11 @@ We demonstrate the effectiveness of the spectral combination method on artificia
 The spectral data were generated from a mean spectral expectation that is a continuum plus a randomly generated (not at all physical) line list, where each line equivalent width was set by a random draw from a power law.
 Each spectral epoch was given a velocity (Doppler shift) by putting the epochs equally spaced on a sinusoidal variation with a semi-amplitude of $30\,\kmps$ (to emulate the motion of the spectrograph with respect to the Solar System barycenter).
 The data were generated with an assumption of unresolved spectral lines and a Gaussian line-spread function (LSF) by simply evaluating the spectral expectation model at pixel centers, so the LSF is effectively the pixel-convolved LSF.
-The individual pixel grids $x_i$ were set to slightly under-sample the pixel-convolved LSF, and they were fixed in the rest frame of the spectrograph.
-After sampling the mean spectral expectation model at the pixels, we add Gaussian noise with a uniform variance such that the signal-to-noise in the continuum is XXXX per pixel in each epoch spectrum.
+After sampling the mean spectral expectation model onto an observational pixel grid, we add Gaussian noise with a uniform variance (HOGG NO WE DON'T!) such that the signal-to-noise in the continuum is XXXX per pixel in each epoch spectrum.
 At a rate of XXX pixels were randomly and independently marked as ``bad'' and offset by a large offset.
 
 HOGG: MAKE 2 DATA SETS, one poorly sampled, one well sampled.
+The individual pixel grids $x_i$ were set to slightly under-sample the pixel-convolved LSF, and they were fixed in the rest frame of the spectrograph.
 
 At each epoch $i$, there is a spectrum $y_i$ with $M_i=XXX$ pixels, a spectrograph rest-frame pixel grid $x_i$ (in log wavelength $x$), and a $M_i$-pixel binary bad-pixel mask $b_i$.
 The full data set is shown in Figure~\label{fig:data1}, and a zoom-in on one epoch is shown in \figurename~\ref{fig:data2}.
@@ -334,13 +334,13 @@ It also grows the bad-pixel mask around the bad pixel.
 
 We show the final result of Standard Practice (tm)---interpolating the input data and then averaging the interpolations---for the two data sets, in \figurename~\ref{fig:standard}.
 We also show the comparison with the true spectral expectation model that was employed to make the fake data.
-We find HOGG WHAT??
+We find HOGG WHAT?? CORRELATIONS; WORSE RESIDUALS NEAR SPECTRAL FEATURES (UH OH).
 \begin{figure}[t!]
     \begin{mdframed}\begin{center}
     \includegraphics[width=\figurewidth]{notebooks/standard1.pdf}\\
     \includegraphics[width=\figurewidth]{notebooks/standard2.pdf}
     \end{center}
-    \caption{Same as \figurename~\ref{fig:forward} but for the output of Standard Practice (tm). Note that the residuals appear to be spatially correlated; more about this in the text and in \figurename~\ref{fig:noise}.\label{fig:standard}}
+    \caption{Same as \figurename~\ref{fig:forward} but for the output of Standard Practice (tm). Note that in the poorly sampled case, the residuals appear to be spatially correlated, and the residuals appear to be larger near strong spectral features; more about these issues in the text and in \figurename~\ref{fig:noise}.\label{fig:standard}}
     \end{mdframed}
 \end{figure}
 
@@ -369,6 +369,8 @@ What happens if you have multiple shifting signals?
 \texttt{wobble} \cite{wobble} is a solution to one version of that problem.
 
 What happens if your data aren't continuum normalized properly?
+
+We assumed no sky subtraction necessary. What gives?
 
 How do you modify to deal with LSF variations (like we have in \textsl{SDSS-V APOGEE}?
 What if you don't know the LSF differences?
