@@ -1,14 +1,18 @@
 # NoDataInterpolation
 advice to the spectroscopists
 
-## Possible authors:
+## Authors:
 - **David W Hogg** (NYU) (MPIA) (Flatiron)
 - **Andy Casey** (Monash)
-- **Matt Daunt** (NYU)
-- **Adrian Price-Whelan** (Flatiron)
 
 ## License:
-Copyright 2022 the authors. All rights reserved, for now.
+Copyright 2022 the authors.
+All code herein is licensed for reuse under the open-source *MIT License*.
+See the file `LICENSE` for more details.
+
+## Contributors:
+- **Matt Daunt** (NYU)
+- **Adrian Price-Whelan** (Flatiron)
 
 ## Projects:
 - Write a note for the astronomical community.
