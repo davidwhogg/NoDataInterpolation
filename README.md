@@ -10,9 +10,10 @@ Copyright 2022 the authors.
 All code herein is licensed for reuse under the open-source *MIT License*.
 See the file `LICENSE` for more details.
 
-## Contributors:
+## Contributors / Acknowledgements:
 - **Matt Daunt** (NYU)
 - **Adrian Price-Whelan** (Flatiron)
+- The **Astronomical Data Group** at the Flatiron Institute.
 
 ## Projects:
 - Write a note for the astronomical community.
