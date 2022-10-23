@@ -208,7 +208,7 @@ In what follows, somewhat arbitrarily, we will use a Fourier basis, which can be
     g_j(x) & = \left\{\begin{array}{cl}\displaystyle\cos\left(\frac{\pi\,[j-1]}{L}\,x\right) & \mbox{for $j$ odd} \\[3ex]
                                        \displaystyle\sin\left(\frac{\pi\,j}{L}\,x\right) & \mbox{for $j$ even}\end{array}\right. ~,
 \end{align}
-where $L$ is a (long) length-scale in the $x$ space (the log-wavelength space).
+where $L$ is a (long) length-scale in the $x$ space (the log-wavelength space), and $1\leq j\leq P$.
 
 Now for the method:
 We stack all of the observations $y_i$ into one huge $M$-pixel list $Y$, where $M=\sum_{i=1}^N M_i$.
@@ -260,38 +260,35 @@ Specific choice of $L$ and $P$ and $M_\star$ in the Fourier case.
 We demonstrate the effectiveness of the spectral combination method on artificial data.
 The spectral data were generated from a mean spectral expectation that is a continuum plus a randomly generated (not at all physical) line list, where each line equivalent width was set by a random draw from a power law.
 Each spectral epoch was given a velocity (Doppler shift) by putting the epochs equally spaced on a sinusoidal variation with a semi-amplitude of $30\,\kmps$ (to emulate the motion of the spectrograph with respect to the Solar System barycenter).
-The data were generated with an assumption of unresolved spectral lines and a Gaussian line-spread function (LSF) by simply evaluating the spectral expectation model at pixel centers, so the LSF is effectively the pixel-convolved LSF.
-The individual pixel grids $x_i$ were set to slightly under-sample the pixel-convolved LSF, and they were fixed in the rest frame of the spectrograph.
-After sampling the mean spectral expectation model at the pixels, we add Gaussian noise with a uniform variance such that the signal-to-noise in the continuum is XXXX per pixel in each epoch spectrum.
-At a rate of XXX pixels were randomly and independently marked as ``bad'' and offset by a large offset.
+The spectral expectation model is built on the assumption of a normalized (unit) continuum and unresolved spectral lines with a Gaussian line-spread function (LSF) with one-sigma width $1/R$, where $R=135\,000$ is the spectrograph resolution).
 
-HOGG: MAKE 2 DATA SETS, one poorly sampled, one well sampled.
+The sampled data at each epoch were made by simply evaluating the spectral expectation model (shifted by the Doppler shift) at the pixel centers, such that the $R=135\,000$ LSF is effectively the pixel-convolved LSF.
+After sampling the mean spectral expectation model onto an observational pixel grid, Gaussian noise is added with a variance that grows linearly with expected flux, such that the signal-to-noise per pixel in the continuum has a definite known value in each epoch spectrum.
+At a rate of 0.01 (one percent), sets of three adjacent pixels were randomly and independently marked as ``bad'' and offset by a large positive offset.
 
-At each epoch $i$, there is a spectrum $y_i$ with $M_i=XXX$ pixels, a spectrograph rest-frame pixel grid $x_i$ (in log wavelength $x$), and a $M_i$-pixel binary bad-pixel mask $b_i$.
-The full data set is shown in Figure~\label{fig:data1}, and a zoom-in on one epoch is shown in \figurename~\ref{fig:data2}.
+According to these rules we made two input data sets.
+One is poorly sampled, with $M=171$ spectral pixels in the input data separated by $2/R$ in $x$ (natural logarithm of wavelength), and signal-to-noise per pixel of 17 in the continuum.
+The other is well sampled, with $M=340$ spectral pixels in the input data separated by $1/R$ in $x$, and signal-to-noise per pixel of 12 in the continuum.
+In each case there are $N=8$ epochs.
+The two complete data sets are shown in \figurename~\label{fig:data1} and \figurename~\ref{fig:data2}.
 \begin{figure}[t!]
     \begin{mdframed}\begin{center}
     \includegraphics[width=1.3\figurewidth]{notebooks/data1.pdf}\\
     \includegraphics[width=\figurewidth]{notebooks/datazoom.pdf}
     \end{center}
-    \caption{The top 8 panels show the $N=8$ epochs of the poorly sampled input data. The bad pixels are indicated with grey bars. The bottom 2 panels show a zoom in on one of the epochs, along with the true spectrum used to generate the data. The true spectrum is shown at zero Doppler shift, while each epoch spectrum is at a finite Doppler shift $\Delta x_i$.\label{fig:data1}}
+    \caption{The top 8 panels show the $N=8$ epochs of the poorly sampled input data, with $N=8$, $M=171$, and signal-to-noise per pixel of 17 in the continuum. The bad pixels are indicated with grey bars. The bottom 2 panels show a zoom in on one of the epochs, along with the true spectrum used to generate the data. The true spectrum is shown at zero Doppler shift, while each epoch spectrum is at a finite Doppler shift $\Delta x_i$ relative to the spectrograph pixel grid.\label{fig:data1}}
     \end{mdframed}
 \end{figure}
 \begin{figure}[t!]
     \begin{mdframed}\begin{center}
     \includegraphics[width=1.3\figurewidth]{notebooks/data2.pdf}
     \end{center}
-    \caption{Similar to the top panels of \figurename~\ref{fig:data1} except showing the well sampled input data.\label{fig:data2}}
+    \caption{Similar to the top panels of \figurename~\ref{fig:data1} except showing the well sampled input data with $N=8$, $M=340$, and signal-to-noise per pixel of 12 in the continuum.\label{fig:data2}}
     \end{mdframed}
 \end{figure}
 
-For the combined spectrum we choose a pixel grid $x_\star$ with $M_\star$ pixels evenly spaced in log wavelength $x$, separated by $1/R$, which (just barely) samples the pixel-convolved LSF well.
-We treat every pixel in the data as having the same noise variance $\sigma_y$ (which is indeed how they were generated).
-
-\paragraph{Fiducial case}
-HOGG: OUR METHOD NEEDS A CONSISTENT NAME USED THROUGHOUT. FORWARD MODEL??
-
-HOGG: Give full list of input parameters for the Fiducial.
+\paragraph{Forward Model (tm)}
+HOGG: Give full list of input parameters for the Fiducial. NOTE THAT WE DON'T DO THE NOISE IVAR RIGHT.
 
 The combined spectrum resulting from the Forward Model (tm) described in \sectionname~\ref{sec:method} is shown in \figurename~\ref{fig:forward}.
 Again, it is compared to the true spectral expectation model.
@@ -305,39 +302,51 @@ We find HOGG WHAT?? HERE SAY ABSOLUTELY WHAT WE FIND.
     \end{mdframed}
 \end{figure}
 
-HOGG: HERE SAY WHAT WE FIND RELATIVELY to Standard Practice (tm).
-
 \paragraph{Standard Practice (tm)}
 In standard practice, the individual spectra $y_i$ are interpolated to rest-frame spectra $y'_i$ using an interpolator.
 In detail, the data are shifted and also resampled onto the output pixel grid $x_\star$.
 The interpolator is a choice; cubic spline, Lanczos, and sinc interpolations are common, since they have good properties with respect to the spectrograph band limit.
-Here we choose a cubic spline for convenience ANDY: WHAT SHOULD WE CHOOSE??.
+Here we choose a cubic spline for convenience, but there are many other choices, including linear, sinc, and Lanczos interpolators, among many others.
 
 The interpolated spectra $y'_i$ are, by construction, all on the same rest-frame wavelength grid $x_\star$ so they can be averaged, with a straight average, a median, an inverse-variance-weighted mean, or any more sophisticated algorithm.
-Here we choose an inverse-variance-weighted mean, but zeroing out the inverse variance at the locations of the bad pixels.
+Here we choose an inverse-variance-weighted mean (HOGG: NO WE DON'T), but zeroing out the inverse variance at the locations of the bad pixels.
 
 This censorship of the bad pixels requires some attention:
 Naive interpolation of an integer (binary actually) bad-pixel mask $b_i$ will not deliver an integer mask $b'_i$.
-The conservative move (which we adopt) is to naively interpolate $b_i$ and then zero out any pixels that are significantly below unity.
+The conservative move (which we adopt) is to naively interpolate $b_i$ (also by the cubic spline) and then zero out any pixels that are significantly below unity.
 In general this substantially grows the binary mask, and reduces the amount of data available for combination.
 
-We show the results of Standard Practice (tm), for the fake data, in \figurename~\ref{fig:standard}.
+An example of a poorly-sampled spectrum interpolated to the rest frame is shown in \figurename~\ref{fig:interpolated}.
+The interpolation introduces substantial ringing artifacts in the spectrum (compare to \figurename~\ref{fig:data1}).
+It also grows the bad-pixel mask around the bad pixel.
+\begin{figure}[t!]
+    \begin{mdframed}\begin{center}
+    \includegraphics[width=\figurewidth]{notebooks/datazoom_interpolated.pdf}
+    \end{center}
+    \caption{HOGG: WRITE CAPTION.\label{fig:interpolated}}
+    \end{mdframed}
+\end{figure}
+
+We show the final result of Standard Practice (tm)---interpolating the input data and then averaging the interpolations---for the two data sets, in \figurename~\ref{fig:standard}.
 We also show the comparison with the true spectral expectation model that was employed to make the fake data.
-We find HOGG WHAT??
+We find HOGG WHAT?? CORRELATIONS; WORSE RESIDUALS NEAR SPECTRAL FEATURES (UH OH).
 \begin{figure}[t!]
     \begin{mdframed}\begin{center}
     \includegraphics[width=\figurewidth]{notebooks/standard1.pdf}\\
     \includegraphics[width=\figurewidth]{notebooks/standard2.pdf}
     \end{center}
-    \caption{Same as \figurename~\ref{fig:forward} but for the output of Standard Practice (tm). Note that the residuals appear to be spatially correlated.}
-    \label{fig:standard}
+    \caption{Same as \figurename~\ref{fig:forward} but for the output of Standard Practice (tm). Note that in the poorly sampled case, the residuals appear to be spatially correlated, and the residuals appear to be larger near strong spectral features; more about these issues in the text and in \figurename~\ref{fig:noise}.\label{fig:standard}}
     \end{mdframed}
 \end{figure}
 
-\paragraph{Noise and noise covariances}
-HOGG do repeated trials to empirically measure the noise covariances.
+HOGG: HERE SAY WHAT WE FIND RELATIVELY between the Forward Model (tm) and Standard Practice (tm).
 
-Plot the empirical covariances as a function of input-data pixel scale, interpolation method, and number of epochs.
+\paragraph{Noise and noise covariances}
+HOGG do repeated trials to empirically measure the noise covariances. How exactly did we do that?
+
+In \figurename~\ref{fig:noise} we show the empirical covariances for the poorly sampled and well sampled data sets.
+In each case, Standard Practice (tm) has a lower noise variance at zero lag, but shows spatially correlated noise over many pixels.
+The Forward Model (tm), in contrast, shows no pixel-to-pixel noise covariances, even when the input data are ill sampled.
 \begin{figure}[t!]
     \begin{mdframed}\begin{center}
     \includegraphics[width=\figurewidth]{notebooks/noise.pdf}
@@ -346,6 +355,9 @@ Plot the empirical covariances as a function of input-data pixel scale, interpol
     \label{fig:noise}
     \end{mdframed}
 \end{figure}
+
+HOGG: Note that if we choose $P<M$ we start to see noise correlations in the Forward Model (tm) too.
+That's one of a few reasons we like $P=M$.
 
 \section{Discussion}\label{sec:discussion}
 
@@ -357,6 +369,8 @@ What happens if you have multiple shifting signals?
 \texttt{wobble} \cite{wobble} is a solution to one version of that problem.
 
 What happens if your data aren't continuum normalized properly?
+
+We assumed no sky subtraction necessary. What gives?
 
 How do you modify to deal with LSF variations (like we have in \textsl{SDSS-V APOGEE}?
 What if you don't know the LSF differences?
