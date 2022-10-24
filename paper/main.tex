@@ -8,15 +8,14 @@
 % - Copy in a figure macro from Hogg & Villar and use it.
 % - Deal with all HOGG, ANDY, ARC, XXX, YYY, CITE, etc.
 
-\documentclass[11pt]{article}
+\documentclass[modern]{aastex631}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
 
 % page and document setup
-\usepackage[letterpaper]{geometry}
-\addtolength{\topmargin}{-0.7in}
-\addtolength{\textheight}{1.8in}
-\renewcommand{\paragraph}[1]{\medskip\par\noindent\textbf{#1}~---}
+\addtolength{\topmargin}{-0.35in}
+\addtolength{\textheight}{0.6in}
+% \renewcommand{\paragraph}[1]{\medskip\par\noindent\textbf{#1}~---}
 
 % figure setup
 \usepackage{graphicx}
@@ -36,6 +35,8 @@
 \setlength{\figurewidth}{0.75\textwidth}
 
 % text macros
+\shorttitle{don't interpolate your data!}
+\shortauthors{hogg \& casey}
 \newcommand{\sectionname}{Section}
 
 % math macros
@@ -43,29 +44,37 @@
 \newcommand{\mps}{\unit{m\,s^{-1}}}
 \newcommand{\kmps}{\unit{km\,s^{-1}}}
 
-\title{\bfseries%
-Don't interpolate your data!}
-\author{Hogg, Casey, others?}
-\date{October 2022}
-
 \sloppy\sloppypar\raggedbottom\frenchspacing
 \begin{document}
 
-\maketitle
+\title{\Huge Don't interpolate your data!}
 
-\paragraph{Abstract}
+\author[0000-0003-2866-9403]{David W. Hogg}
+\affiliation{Center for Cosmology and Particle Physics, Department of Physics, New York University}
+\affiliation{Max-Planck-Institut f\"ur Astronomie, Heidelberg}
+\affiliation{Flatiron Institute, a division of the Simons Foundation}
+
+\author[0000-0003-0174-0564]{Andrew R. Casey}
+\affiliation{School of Physics \& Astronomy, Monash University}
+\affiliation{Faculty of Information Technology, Monash University}
+
+\begin{abstract}\noindent
 When there are many observations of an astronomical source---many images with different dithers, or many spectra taken at different barycentric velocities---it is often tempting to shift and stack the data, to (for example) make a high signal-to-noise average image or mean spectrum.
 Bound-saturating measurements are made not by manipulating data, but instead by manipulating a likelihood function, where the data are treated as fixed, and model parameters are modified to fit the data.
-Traditional shifting and stacking of data can be converted into a model-fitting procedure, such that no data are ever harmed, and yet the output is the shift-adjusted mean spectrum.
+Traditional shifting and stacking of data can be converted into a model-fitting procedure, such that no data are ever harmed, and yet the output is the shift-adjusted mean.
 The key component of this conversion is a spectral model that is completely flexible but also a continuous function of wavelength (or position in the case of imaging) that can represent any signal being measured by the device after any reasonable translation.
 The benefits of a modeling approach are myriad:
-The sacred data never have to be modified.
-Noise maps, data gaps, and bad-data masks don't have to be interpolated.
+The sacred data never are modified.
+Noise maps, data gaps, and bad-data masks don't require interpolation.
 The output can take the form of a spectrum evaluated on a pixel grid, as is traditional.
 The noise in the output spectrum becomes uncorrelated across neighboring pixels.
 The only cost is a small increase in computational complexity.
 We demonstrate all of these things with a small data example and we provide open-source sample code for re-use.
+\end{abstract}
 
+\keywords{Foo --- Bar --- HOGG}
+
+\section*{}\clearpage
 \section{Introduction}\label{sec:intro}
 
 Things to emphasize here and below:
@@ -267,10 +276,10 @@ After sampling the mean spectral expectation model onto an observational pixel g
 At a rate of 0.01 (one percent), sets of three adjacent pixels were randomly and independently marked as ``bad'' and offset by a large positive offset.
 
 According to these rules we made two input data sets.
-One is poorly sampled, with $M=171$ spectral pixels in the input data separated by $2/R$ in $x$ (natural logarithm of wavelength), and signal-to-noise per pixel of 17 in the continuum.
+One is poorly sampled, with $M=171$ spectral pixels in the input data separated by $2/R$ in $x$ (natural logarithm of wavelength), and signal-to-noise per pixel of 18 in the continuum.
 The other is well sampled, with $M=340$ spectral pixels in the input data separated by $1/R$ in $x$, and signal-to-noise per pixel of 12 in the continuum.
 In each case there are $N=8$ epochs.
-The two complete data sets are shown in \figurename~\label{fig:data1} and \figurename~\ref{fig:data2}.
+The two complete data sets are shown in \figurename~\ref{fig:data1} and \figurename~\ref{fig:data2}.
 \begin{figure}[t!]
     \begin{mdframed}\begin{center}
     \includegraphics[width=1.3\figurewidth]{notebooks/data1.pdf}\\
@@ -288,11 +297,12 @@ The two complete data sets are shown in \figurename~\label{fig:data1} and \figur
 \end{figure}
 
 \paragraph{Forward Model (tm)}
-HOGG: Give full list of input parameters for the Fiducial. NOTE THAT WE DON'T DO THE NOISE IVAR RIGHT.
+As our main experiment or result, we apply the Forward Model (tm) as described above in \sectionname~\ref{sec:method} to the input data shown in \figurename~\ref{fig:data1} and \figurename~\ref{fig:data2}.
+In each case, the output pixel grid $x_\star$ is chosen to be well sampled, with a pixel spacing of $1/R$ in the (natural) logarithm of wavelength.
+In order to give the model maximum flexibility, the number $P$ of Fourier modes in the spectral model is set to be equal to the number of pixels $M_\star$ in the pixel representation.
+The log-wavelength scale $L$ of the Fourier basis was set to the pixel spacing times the number of pixels.
+We didn't employ any data weighting; we treated every epoch as identical in terms of inverse variance.
 
-The combined spectrum resulting from the Forward Model (tm) described in \sectionname~\ref{sec:method} is shown in \figurename~\ref{fig:forward}.
-Again, it is compared to the true spectral expectation model.
-We find HOGG WHAT?? HERE SAY ABSOLUTELY WHAT WE FIND.
 \begin{figure}[t!]
     \begin{mdframed}\begin{center}
     \includegraphics[width=\figurewidth]{notebooks/forward1.pdf}\\
@@ -301,6 +311,10 @@ We find HOGG WHAT?? HERE SAY ABSOLUTELY WHAT WE FIND.
     \caption{The top two panels show the result of running the Forward Model (tm) on the poorly sampled input data, plus the residual away from the truth. The bottom two panels show the same but for the well sampled input data. In each panel, the red line shows the true model used to generate the data.\label{fig:forward}}
     \end{mdframed}
 \end{figure}
+The combined spectrum resulting from the Forward Model (tm) described in \sectionname~\ref{sec:method} is shown in \figurename~\ref{fig:forward}.
+It is compared to the true spectral expectation model that was used to generate the data.
+Also shown in \figurename~\ref{fig:forward} is the residuals, Forward Model (tm) minus truth.
+The residuals look stationary, approximately Gaussian, and uncorrelated (more on this below).
 
 \paragraph{Standard Practice (tm)}
 In standard practice, the individual spectra $y_i$ are interpolated to rest-frame spectra $y'_i$ using an interpolator.
@@ -316,20 +330,17 @@ Naive interpolation of an integer (binary actually) bad-pixel mask $b_i$ will no
 The conservative move (which we adopt) is to naively interpolate $b_i$ (also by the cubic spline) and then zero out any pixels that are significantly below unity.
 In general this substantially grows the binary mask, and reduces the amount of data available for combination.
 
-An example of a poorly-sampled spectrum interpolated to the rest frame is shown in \figurename~\ref{fig:interpolated}.
-The interpolation introduces substantial ringing artifacts in the spectrum (compare to \figurename~\ref{fig:data1}).
-It also grows the bad-pixel mask around the bad pixel.
 \begin{figure}[t!]
     \begin{mdframed}\begin{center}
     \includegraphics[width=\figurewidth]{notebooks/datazoom_interpolated.pdf}
     \end{center}
-    \caption{HOGG: WRITE CAPTION.\label{fig:interpolated}}
+    \caption{As part of Standard Practice (tm), it is necessary to interpolate the individual epoch spectra before averaging them. This shows one epoch of the poorly sampled data, interpolated to the output $x_\star$ pixel grid in the rest frame. The interpolated spectrum is compared to the true spectral expectation employed to generate it. Note the ringing induced by the interpolation. Also shown is the censored data, near an interpolated bad pixel and at the edge of the domain. Compare to the bottom panels of \figurename~\ref{fig:data1}.\label{fig:interpolated}}
     \end{mdframed}
 \end{figure}
+An example of a poorly-sampled spectrum interpolated to the rest frame is shown in \figurename~\ref{fig:interpolated}.
+The interpolation introduces substantial ringing artifacts in the spectrum (compare to \figurename~\ref{fig:data1}).
+It also grows the bad-pixel mask around the bad pixel.
 
-We show the final result of Standard Practice (tm)---interpolating the input data and then averaging the interpolations---for the two data sets, in \figurename~\ref{fig:standard}.
-We also show the comparison with the true spectral expectation model that was employed to make the fake data.
-We find HOGG WHAT?? CORRELATIONS; WORSE RESIDUALS NEAR SPECTRAL FEATURES (UH OH).
 \begin{figure}[t!]
     \begin{mdframed}\begin{center}
     \includegraphics[width=\figurewidth]{notebooks/standard1.pdf}\\
@@ -338,8 +349,9 @@ We find HOGG WHAT?? CORRELATIONS; WORSE RESIDUALS NEAR SPECTRAL FEATURES (UH OH)
     \caption{Same as \figurename~\ref{fig:forward} but for the output of Standard Practice (tm). Note that in the poorly sampled case, the residuals appear to be spatially correlated, and the residuals appear to be larger near strong spectral features; more about these issues in the text and in \figurename~\ref{fig:noise}.\label{fig:standard}}
     \end{mdframed}
 \end{figure}
-
-HOGG: HERE SAY WHAT WE FIND RELATIVELY between the Forward Model (tm) and Standard Practice (tm).
+We show the final result of Standard Practice (tm)---interpolating the input data and then averaging the interpolations---for the two data sets, in \figurename~\ref{fig:standard}.
+We also show the comparison with the true spectral expectation model that was employed to make the fake data.
+The residuals look correlated (there is some ringing), and the residuals are larger near strong spectral features, especially in the case of the poorly sampled input data.
 
 \paragraph{Noise and noise covariances}
 HOGG do repeated trials to empirically measure the noise covariances. How exactly did we do that?
@@ -351,8 +363,7 @@ The Forward Model (tm), in contrast, shows no pixel-to-pixel noise covariances, 
     \begin{mdframed}\begin{center}
     \includegraphics[width=\figurewidth]{notebooks/noise.pdf}
     \end{center}
-    \caption{HOGG: Something.}
-    \label{fig:noise}
+    \caption{The empirical noise variance in the output (combined) spectra, and pixel-to-pixel covariances, as a function of pixel lag (pixel offset). The variances were estimated by performing the experiments repeated 64 times, with the same spectral expectations and sampling but unique noise draws. The Forward Model (tm) has slightly larger variance per pixel at zero lag, but vanishing pixel-to-pixel correlations. In contrast, the Standard Practice (tm) leads to correlated pixel values, with correlations extending out to many pixels.\label{fig:noise}}
     \end{mdframed}
 \end{figure}
 
