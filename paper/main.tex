@@ -15,7 +15,8 @@
 % page and document setup
 \addtolength{\topmargin}{-0.35in}
 \addtolength{\textheight}{0.6in}
-% \renewcommand{\paragraph}[1]{\medskip\par\noindent\textbf{#1}~---}
+\setlength{\parindent}{3.5ex}
+\renewcommand{\paragraph}[1]{\medskip\par\noindent\textbf{#1}~---}
 
 % figure setup
 \usepackage{graphicx}
@@ -77,6 +78,26 @@ We demonstrate all of these things with a small data example and we provide open
 \section*{}\clearpage
 \section{Introduction}\label{sec:intro}
 
+It would be wrong to say that the practice of astronomy is, basically, \emph{staring at the sky}.
+That said, staring at the sky is a big part of what we do.
+And the way we do it, usually, is this:
+We take many individual images of our target with exposure times that are long enough to make read noise irrelevant (if possible) while at the same time short enough to avoid saturation (of what we care about).
+We then shift and average (maybe median?) those images to get the highest possible signal-to-noise on our target.
+This, fundamentally, is the technology underlying the \textsl{Hubble Deep Field} (\citealt{hdf}),
+the \textsl{APOGEE} spectroscopic survey (\citealt{apogee}),
+and the future Rubin Observatory \textsl{LSST} (\citealt{lsst}), among countless other projects.
+
+Is it astronomical blasphemy to say that this practice is \emph{wrong?}
+It is wrong because minimum-variance unbiased estimators are (often) maximum-likelihood estimators (\citealt{something}).
+The deep, high signal-to-noise image or spectrum we seek is a statistical estimate of the image or spectrum, given noisy data.
+Noisy data are combined to make a measurement by building and optimizing a likelihood, not shifting and stacking!
+Of course we don't always think of an image or a spectrum of the sky as the result of applying an \emph{estimator}.
+But it is.
+It is just a simultaneous estimate of a lot of different components (a lot of different pixels; all the pixels in the combined image or spectrum).
+
+Our view is that image combination should be seen as a problem in statistical estimation.
+Let's find the best estimator for the combined image we can find, and let's deliver that (along with an uncertainty estimate).
+
 Things to emphasize here and below:
 \begin{itemize}
 \item The input--output relationship of this modeling approach is identical to the input--output relationship of the shift-and-coadd approach. It is just better.
@@ -86,6 +107,8 @@ Things to emphasize here and below:
 \item We should choose a rigid terminology and stick to it here. HOGG is currently liking ``combined spectrum'' for the model expectation.
 \item This model is a sub-model of \textsl{wobble} \cite{wobble}.
 \end{itemize}
+
+Most important: Say here why you should never want to do this at all!
 
 \section{Concepts and assumptions}\label{sec:assumptions}
 
@@ -405,6 +428,7 @@ Code is available at HOGG THIS URL.
 \paragraph{Acknowledgements}
 It is a pleasure to thank
 Matt Daunt (NYU),
+Dustin Lang (Perimeter),
 Adrian Price-Whelan (Flatiron),
 and the Astronomical Data Group at the Flatiron Institute,
 for valuable discussions.
