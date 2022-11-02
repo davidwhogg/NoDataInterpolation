@@ -45,6 +45,7 @@
 \newcommand{\mps}{\unit{m\,s^{-1}}}
 \newcommand{\kmps}{\unit{km\,s^{-1}}}
 
+
 \sloppy\sloppypar\raggedbottom\frenchspacing
 \begin{document}
 
@@ -57,7 +58,6 @@
 
 \author[0000-0003-0174-0564]{Andrew R. Casey}
 \affiliation{School of Physics \& Astronomy, Monash University}
-\affiliation{Faculty of Information Technology, Monash University}
 
 \begin{abstract}\noindent
 When there are many observations of an astronomical source---many images with different dithers, or many spectra taken at different barycentric velocities---it is often tempting to shift and stack the data, to (for example) make a high signal-to-noise average image or mean spectrum.
@@ -68,7 +68,7 @@ The benefits of a modeling approach are myriad:
 The sacred data never are modified.
 Noise maps, data gaps, and bad-data masks don't require interpolation.
 The output can take the form of a spectrum evaluated on a pixel grid, as is traditional.
-The noise in the output spectrum becomes uncorrelated across neighboring pixels.
+The noise in the output spectrum becomes uncorrelated across neighboring pixels. 
 The only cost is a small increase in computational complexity.
 We demonstrate all of these things with a small data example and we provide open-source sample code for re-use.
 \end{abstract}
@@ -82,7 +82,7 @@ It would be wrong to say that the practice of astronomy is, basically, \emph{sta
 That said, staring at the sky is a big part of what we do.
 And the way we do it, usually, is this:
 We take many individual images of our target with exposure times that are long enough to make read noise irrelevant (if possible) while at the same time short enough to avoid saturation (of what we care about).
-We then shift and average (maybe median?) those images to get the highest possible signal-to-noise on our target.
+We then shift and average sdfa(maybe median?) those images to get the highest possible signal-to-noise on our target.
 This, fundamentally, is the technology underlying the \textsl{Hubble Deep Field} (\citealt{hdf}),
 the \textsl{APOGEE} spectroscopic survey (\citealt{apogee}),
 and the future Rubin Observatory \textsl{LSST} (\citealt{lsst}), among countless other projects.
@@ -90,13 +90,22 @@ and the future Rubin Observatory \textsl{LSST} (\citealt{lsst}), among countless
 Is it astronomical blasphemy to say that this practice is \emph{wrong?}
 It is wrong because minimum-variance unbiased estimators are (often) maximum-likelihood estimators (\citealt{something}).
 The deep, high signal-to-noise image or spectrum we seek is a statistical estimate of the image or spectrum, given noisy data.
-Noisy data are combined to make a measurement by building and optimizing a likelihood, not shifting and stacking!
+Noisy data are combined to make a measurement by building and optimizing a likelihood, not by shifting and stacking!
 Of course we don't always think of an image or a spectrum of the sky as the result of applying an \emph{estimator}.
 But it is.
 It is just a simultaneous estimate of a lot of different components (a lot of different pixels; all the pixels in the combined image or spectrum).
 
 Our view is that image combination should be seen as a problem in statistical estimation.
 Let's find the best estimator for the combined image we can find, and let's deliver that (along with an uncertainty estimate).
+The data are never manipulated when using an estimator, but the relationship between the per epoch observations (inputs) and `combined image' or `combined spectrum' (outputs) is identical to the input--output relationship of a shift-and-coadd approach.
+Unlike the shift-and-coadd approach, an estimator is insensitive to under- or poorly-sampled data (e.g., \textsl{APOGEE} raw data).
+As we will show, an estimator also yields a more faithful representation\footnote{
+    An estimator needs a \emph{model} to produce a combined spectrum, but we use the word \emph{representation} to avoid overloading the word `model', and to indicate that we will not construct a physical model of a spectrum from atomic physics.
+    We only need a flexible representation!
+}
+of the underlying \emph{true} spectrum, critically important for any subsequent precision measurements (e.g., radial velocities, chemical abundances).
+
+
 
 Things to emphasize here and below:
 \begin{itemize}
