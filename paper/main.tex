@@ -45,6 +45,7 @@
 \newcommand{\mps}{\unit{m\,s^{-1}}}
 \newcommand{\kmps}{\unit{km\,s^{-1}}}
 
+% notes
 
 \sloppy\sloppypar\raggedbottom\frenchspacing
 \begin{document}
@@ -127,14 +128,14 @@ We are going to make many other assumptions too, all of which are discussed in t
 \paragraph{Multi-epoch spectra with shifts}
 We will assume that there are $n$ observations (epochs) of the same star (or maybe of different stars or quasars, say, that are assumed to be more-or-less identical, intrinsically, but let's think of a single star for now).
 Each of these observations $i$ (with $1\leq i\leq n$) produces a one-dimensional observed (noisy) image $y_i$.
-The $y_i$ can be thought of as $m_i$-vectors in what follows, where $m_i$ is the number of pixels in the spectrum.
+The $y_i$ can be thought of as $m_i$-vectors in what follows, where $m_i$ is the number of pixels in the $i$-th spectrum.
 The different observations are made at different relative velocities (star minus spectrograph) such that the different images are shifted by a different shift $\Delta x_i$ relative to the detector or extracted wavelength grid.
 
 \paragraph{Shift operators}
 Because the shifts might be non-linear, the shifts $\Delta x_i$ won't be pure numbers but something more like shift operators.
 That is, if there were a true spectrum $\tilde{y}$, each individual noisy image $y_i$ would be related to that true spectrum by a shift operator acting on that true spectrum, plus noise.
 We will begin by assuming that (from some external information) we know these shift operators very accurately.
-At the end we may (do we?) return to the question of how those shift operators are determined.
+At the end we may (do we?) return to the question of how those shift operators are determined. ANDY: SMASH! Out of scope!
 
 \paragraph{Wavelength calibration}
 We will assume that, for every $m_i$-pixel image $y_i$ we also have a $m_i$-vector (or list) $x_i$ of pixel positions, such that each element of $x_i$ gives an accurate and precise value for the wavelength (or position in the spectrograph, in some settings) for each pixel of the image $y_i$.
@@ -150,6 +151,11 @@ We don't need to assume that the different pixels of the spectrum received indep
 \paragraph{Bad-pixel masks}
 Occasionally (or frequently) some of the pixels of a spectrum $y_i$ might be bad---affected by cosmic rays or electronics issues---such that there is a bad-pixel mask $b_i$ associated with each spectrum $y_i$.
 This mask has value 1 in the locations in all good pixels, and 0 in the locations of all bad pixels.
+
+\paragraph{Bit-flag masks (or is it bit-masks? bit-pixel masks?)}
+A bit-flag mask is often used to encode meta data about an observation that otherwise cannot be represented by the spectrum $y_i$ or its asssociated variance tensor $C_i$ (e.g., poorly described line spread function), and we often want to propagate this meta data to appropriate pixels in the combined spectrum.
+These bit-flag masks are usually encoded as integers with up to $p$ potential flags, allowing for multiple flags to be encoded as a single value $\sum^{P}_{p=0} 2^p$. 
+This bit-flag mask can be separated into $p$ masks where each has value 1 in the locations where the flag is marked, and 0 in the locations where it is not.
 
 \paragraph{Data gaps}
 There is no assumption here that all the $y_i$ have the same number of pixels $m_i$, nor that the pixel grid is in any sense uniform or complete.
