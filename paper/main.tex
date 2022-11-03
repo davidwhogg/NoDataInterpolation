@@ -91,15 +91,28 @@ the \textsl{APOGEE} spectroscopic survey (\citealt{apogee}),
 and the future Rubin Observatory \textsl{LSST} (\citealt{lsst}), among countless other projects.
 
 Is it astronomical blasphemy to say that this practice is \emph{wrong?}
-It is wrong because minimum-variance unbiased estimators are (often) maximum-likelihood estimators (\citealt{something}).
-The deep, high signal-to-noise image or spectrum we seek is a statistical estimate of the image or spectrum, given noisy data.
-Noisy data are combined to make a measurement by building and optimizing a likelihood, not by shifting and stacking!
-Of course we don't always think of an image or a spectrum of the sky as the result of applying an \emph{estimator}.
-But it is.
+It is wrong because minimum-variance unbiased estimators require care in their construction; they are (often) maximum-likelihood estimators (\citealt{something}).
+The deep, high signal-to-noise image or spectrum we seek is a statistical estimate of the image or spectrum, given the noisy data of the individual exposures.
+Noisy data are combined to make a measurement by building and optimizing a likelihood, not by shifting and stacking the input data.
+Of course we don't always think of an image or a spectrum of the sky as the result of applying an \emph{estimator},
+but it is.
 It is just a simultaneous estimate of a lot of different components (a lot of different pixels; all the pixels in the combined image or spectrum).
 
-Our view is that image combination should be seen as a problem in statistical estimation.
-Let's find the best estimator for the combined image we can find, and let's deliver that (along with an uncertainty estimate).
+We are in a period in astrophysics in which exceedingly precise measurements are expected, in both imaging and spectroscopy projects.
+In spectroscopy, in particular, high signal-to-noise spectral measurements are expected to obtain surface-abundance measurements with precisions a few percent, and radial-velocity measurements with precisions of up to one ten-thousandth of a \emph{pixel} (in terms of the Doppler shift).
+Spectral combination methods that distort absorption (or emission) lines will translate into biases, errors, or increased variance in these measurements.
+Spectral combination methods that correlate the noise in the outputs will translate into increased variance, and necessitate more sophisticated downstream measurement techniques (which don't really exist at present).
+
+HOGG: Of course if your GOAL IS RV you should DO SOMETHING DIFFERENT.
+
+One of the great things about the standard practice---the simple process of shifting and stacking the data---is that this procedure makes almost no assumptions about what the output, combined image or spectrum will look like.
+It isn't really a ``model'' for the data; it is more like a ``summary'' of the data.
+When we switch to a statistical-inference framework, we have to choose some form or basis for expressing the combined image.
+In what follows we use a maximally parameterized model, in the sense that we choose an expression for the functions or function space that has as many parameters as the output image has pixels.
+That means that the approach we take does not get its power from the choice of parameterized functions for the output:
+Indeed it has just as much freedom as the shifting-and-stacking standard practice.
+The forward-modeling we recommend gets its power from the fact that it generates the data directly and without manipulation.
+
 The data are never manipulated when using an estimator, but the relationship between the per epoch observations (inputs) and `combined image' or `combined spectrum' (outputs) is identical to the input--output relationship of a shift-and-coadd approach.
 Unlike the shift-and-coadd approach, an estimator is insensitive to under- or poorly-sampled data (e.g., \textsl{APOGEE} raw data).
 As we will show, an estimator also yields a more faithful representation\footnote{
@@ -112,12 +125,11 @@ of the underlying \emph{true} spectrum, critically important for any subsequent 
 
 Things to emphasize here and below:
 \begin{itemize}
-\item The input--output relationship of this modeling approach is identical to the input--output relationship of the shift-and-coadd approach. It is just better.
-\item People have a lot of hangups about the word ``model''. We have to use another word, or be very very careful how we use this word. For instance, some people I talked to about this thought I meant a physical model of the spectrum starting with atomic physics!
-\item We have to explain why and how we are better than other approaches in terms that people care about (like radial-velocity precision and abundances etc).
-\item All this is even more important in ill-sampled contexts than well-sampled contexts. See, for example, \textsl{APOGEE} raw data!
+    \item Maybe move this to the method section? People have a lot of hangups about the word ``model''. We have to use another word, or be very very careful how we use this word. For instance, some people I talked to about this thought I meant a physical model of the spectrum starting with atomic physics!
+    \item All this is even more important in ill-sampled contexts than well-sampled contexts. See, for example, \textsl{APOGEE} raw data!
 \item We should choose a rigid terminology and stick to it here. HOGG is currently liking ``combined spectrum'' for the model expectation.
-\item This model is a sub-model of \textsl{wobble} \cite{wobble}.
+\item This problem is a sub-problem of \textsl{wobble} \cite{wobble}.
+\item The problem we solve here is the easy case. In the hard case, there is a slit, and the object is extended, and different observations are at different slit angles, different slit positions, and with different atmospheric seeing. That problem is a hard problem! But it probably solves the same way. Say a bit here and more in the discussion.
 \end{itemize}
 
 Most important: Say here why you should never want to do this at all!
