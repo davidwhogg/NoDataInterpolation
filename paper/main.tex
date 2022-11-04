@@ -37,6 +37,8 @@
 
 % text macros
 \shorttitle{don't interpolate your data!}
+% Or...
+%\shorttitle{Binning is sinning!}
 \shortauthors{hogg \& casey}
 \newcommand{\sectionname}{Section}
 
@@ -44,6 +46,8 @@
 \newcommand{\unit}[1]{\mathrm{#1}}
 \newcommand{\mps}{\unit{m\,s^{-1}}}
 \newcommand{\kmps}{\unit{km\,s^{-1}}}
+
+% notes
 
 \sloppy\sloppypar\raggedbottom\frenchspacing
 \begin{document}
@@ -57,7 +61,6 @@
 
 \author[0000-0003-0174-0564]{Andrew R. Casey}
 \affiliation{School of Physics \& Astronomy, Monash University}
-\affiliation{Faculty of Information Technology, Monash University}
 
 \begin{abstract}\noindent
 When there are many observations of an astronomical source---many images with different dithers, or many spectra taken at different barycentric velocities---it is often tempting to shift and stack the data, to (for example) make a high signal-to-noise average image or mean spectrum.
@@ -68,7 +71,7 @@ The benefits of a modeling approach are myriad:
 The sacred data never are modified.
 Noise maps, data gaps, and bad-data masks don't require interpolation.
 The output can take the form of a spectrum evaluated on a pixel grid, as is traditional.
-The noise in the output spectrum becomes uncorrelated across neighboring pixels.
+The noise in the output spectrum becomes uncorrelated across neighboring pixels. 
 The only cost is a small increase in computational complexity.
 We demonstrate all of these things with a small data example and we provide open-source sample code for re-use.
 \end{abstract}
@@ -110,10 +113,20 @@ That means that the approach we take does not get its power from the choice of p
 Indeed it has just as much freedom as the shifting-and-stacking standard practice.
 The forward-modeling we recommend gets its power from the fact that it generates the data directly and without manipulation.
 
+The data are never manipulated when using an estimator, but the relationship between the per epoch observations (inputs) and `combined image' or `combined spectrum' (outputs) is identical to the input--output relationship of a shift-and-coadd approach.
+Unlike the shift-and-coadd approach, an estimator is insensitive to under- or poorly-sampled data (e.g., \textsl{APOGEE} raw data).
+As we will show, an estimator also yields a more faithful representation\footnote{
+    An estimator needs a \emph{model} to produce a combined spectrum, but we use the word \emph{representation} to avoid overloading the word `model', and to indicate that we will not construct a physical model of a spectrum from atomic physics.
+    We only need a flexible representation!
+}
+of the underlying \emph{true} spectrum, critically important for any subsequent precision measurements (e.g., radial velocities, chemical abundances).
+
+
+
 Things to emphasize here and below:
 \begin{itemize}
-\item Maybe move this to the method section? People have a lot of hangups about the word ``model''. We have to use another word, or be very very careful how we use this word. For instance, some people I talked to about this thought I meant a physical model of the spectrum starting with atomic physics!
-\item All this is even more important in ill-sampled contexts than well-sampled contexts. See, for example, \textsl{APOGEE} raw data!
+    \item Maybe move this to the method section? People have a lot of hangups about the word ``model''. We have to use another word, or be very very careful how we use this word. For instance, some people I talked to about this thought I meant a physical model of the spectrum starting with atomic physics!
+    \item All this is even more important in ill-sampled contexts than well-sampled contexts. See, for example, \textsl{APOGEE} raw data!
 \item We should choose a rigid terminology and stick to it here. HOGG is currently liking ``combined spectrum'' for the model expectation.
 \item This problem is a sub-problem of \textsl{wobble} \cite{wobble}.
 \item The problem we solve here is the easy case. In the hard case, there is a slit, and the object is extended, and different observations are at different slit angles, different slit positions, and with different atmospheric seeing. That problem is a hard problem! But it probably solves the same way. Say a bit here and more in the discussion.
@@ -129,14 +142,14 @@ We are going to make many other assumptions too, all of which are discussed in t
 \paragraph{Multi-epoch spectra with shifts}
 We will assume that there are $n$ observations (epochs) of the same star (or maybe of different stars or quasars, say, that are assumed to be more-or-less identical, intrinsically, but let's think of a single star for now).
 Each of these observations $i$ (with $1\leq i\leq n$) produces a one-dimensional observed (noisy) image $y_i$.
-The $y_i$ can be thought of as $m_i$-vectors in what follows, where $m_i$ is the number of pixels in the spectrum.
+The $y_i$ can be thought of as $m_i$-vectors in what follows, where $m_i$ is the number of pixels in the $i$-th spectrum.
 The different observations are made at different relative velocities (star minus spectrograph) such that the different images are shifted by a different shift $\Delta x_i$ relative to the detector or extracted wavelength grid.
 
 \paragraph{Shift operators}
 Because the shifts might be non-linear, the shifts $\Delta x_i$ won't be pure numbers but something more like shift operators.
 That is, if there were a true spectrum $\tilde{y}$, each individual noisy image $y_i$ would be related to that true spectrum by a shift operator acting on that true spectrum, plus noise.
 We will begin by assuming that (from some external information) we know these shift operators very accurately.
-At the end we may (do we?) return to the question of how those shift operators are determined.
+At the end we may (do we?) return to the question of how those shift operators are determined. ANDY: SMASH! Out of scope!
 
 \paragraph{Wavelength calibration}
 We will assume that, for every $m_i$-pixel image $y_i$ we also have a $m_i$-vector (or list) $x_i$ of pixel positions, such that each element of $x_i$ gives an accurate and precise value for the wavelength (or position in the spectrograph, in some settings) for each pixel of the image $y_i$.
@@ -153,6 +166,12 @@ We don't need to assume that the different pixels of the spectrum received indep
 Occasionally (or frequently) some of the pixels of a spectrum $y_i$ might be bad---affected by cosmic rays or electronics issues---such that there is a bad-pixel mask $b_i$ associated with each spectrum $y_i$.
 This mask has value 1 in the locations in all good pixels, and 0 in the locations of all bad pixels.
 
+\paragraph{Bit-flag masks}
+A bit-flag mask is often used to store meta data about specific pixels in an observation that otherwise cannot be encoded by the spectrum $y_i$ or its asssociated variance tensor $C_i$ (e.g., poorly described line spread function). 
+We often want to propagate this meta data to appropriate pixels in the combined spectrum. 
+These bit-flag masks are usually encoded as integers with up to $F$ potential flags, allowing for all (or a subset of) flags to be encoded as a single value $\sum^{F}_{f=0} 2^f$. 
+This bit-flag mask can be separated into $F$ masks where each has value 1 in the locations where the flag is marked, and 0 in the locations where it is not.
+
 \paragraph{Data gaps}
 There is no assumption here that all the $y_i$ have the same number of pixels $m_i$, nor that the pixel grid is in any sense uniform or complete.
 That is, there can be gaps and spaces in the wavelength coverage of the spectra, as there are at chip gaps and where the detector has bad columns.
@@ -160,7 +179,7 @@ That is, there can be gaps and spaces in the wavelength coverage of the spectra,
 \paragraph{Pixel-convolved line-spread function}
 The spectrograph has something like a point-spread function or line-spread function, which, in the case of spectrosccopy, sets the shape of an unresolved spectral line.
 In general it depends on the slit or fiber width, the spectrograph resolution and optics, instrument focus, and the properties of the detector.
-In what follows we will not build any model of any of this.
+In what follows we will not build a model of any of this.
 Instead we will assume that there is a relatively constant pixel-convolved line-spread function (PCLSF), constant both in time, and constant with respect to the shifts $\Delta x_i$ we see in our data set.
 We consider only the PCLSF, because then the sampling by the detector pixels does not require any additional convolution.
 That is, when the PCLSF is used to model a spectrum, the projection onto the pixels is just a sampling of the function at the pixel centers, and does not involve any convolution over the face of the pixel.
@@ -168,10 +187,12 @@ All that said, we won't explicitly model or use the PCLSF in what follows; we wi
 
 HOGG: Something about the LSF being different in different exposures!
 
-\paragraph{Continuous spectral model}
+\paragraph{Continuous spectral model} 
 In what follows we are going to avoid interpolating the \emph{data} by having a spectral \emph{model} that can be arbitrarily and losslessly interpolated.
 That means that the spectral model must be a representation of a continuous one-dimensional function.
 If we were working on two-dimensional images, the model would have to be a representation of a continous two-dimensional function.
+
+ANDY: discuss with Hogg and check earlier language on spectral representation. Could introduce it earlier as continuous spectral model.
 
 \paragraph{Linear basis or mixture models}
 The simplest kind of model for a continuous function is a sum or mixture or linear combination of continuous basis functions.
@@ -213,6 +234,8 @@ In particular, we will assume that the images or spectra have been bias-correcte
 Alternatively, the input data might be continuum-normalized or pseudo-continuum-normalized.
 Again, the assumption is that the different calibrated or processed observations are of the same underlying signal.
 
+ANDY: Should we mention something about if it is not telluric corrected, and you have many epochs of a source that has perceived radial velocity variations, then you want something like wobble?
+
 \section{Method}\label{sec:method}
 
 The problem set-up is that there are $N$ spectral measurements $y_i$ (with $1\leq i\leq N$), each of which is a $M_i$-pixel list of intensities (fluxes maybe).
@@ -241,6 +264,7 @@ That is, you do not need to know the noise variances accurately (or even at all)
 
 If you additionally have a bad-pixel mask $b_i$ associated with each observation $y_i$, the bad-pixel mask can be used simply to zero out the corresponding bad rows and columns of the inverse covariance matrix $C_i^{-1}$.
 Importantly, the bad data get zeros in the \emph{inverse} covariance matrix, not the covariance matrix!
+We will propagate the meta data from the bit-flag mask later.
 
 Because we are often dealing with a spectrograph with a (fairly) well defined spectral resolution ($\delta\lambda/\lambda$ roughly constant), and because we care a lot about Doppler shifts (which are uniform in log wavelength), it makes sense to think of the pixel positions $x_i$ and shifts $\Delta x_i$ as being in log-wavelength (or ln-wavelength) units.
 Indeed, the \textsl{Sloan Digital Sky Survey} family of spectrographs extract one-dimensional spectra on a uniform-in-log-wavelength basis.
@@ -254,15 +278,16 @@ In what follows, somewhat arbitrarily, we will use a Fourier basis, which can be
 where $L$ is a (long) length-scale in the $x$ space (the log-wavelength space), and $1\leq j\leq P$.
 
 Now for the method:
-We stack all of the observations $y_i$ into one huge $M$-pixel list $Y$, where $M=\sum_{i=1}^N M_i$.
+% ANDY: this used to say "We stack" and it triggered me because I just read 7 pages about how we shouldn't "stack"!
+We append all of the observations $y_i$ into one huge $M$-pixel list $Y$, where $M=\sum_{i=1}^N M_i$.
 We make a $M\times M$ block-diagonal matrix $C^{-1}$ from all the individual inverse variance matrices $C_i^{-1}$.
 We make a $M\times P$ design matrix $X$ which is the evaluation of all the $P$ basis functions at all the pixel locations in all of the $x_i$.
 Once we have these things, the best-fit parameters $\hat\theta$ are
 \begin{align}
     \hat\theta &= (X^\top\,C^{-1}\,X)^{-1}\,X^\top\,C^{-1}\,Y ~,
 \end{align}
-which is the maximum-likelihood or minimum-chi-squared solution for a linear weighted least squares problem or a linear model with Gaussian noise (see, for example, \cite{hoggfitting}).
-And now if we choose a final (uniform, say) output pixel grid $x_\star$ in the rest-frame (unshifted) wavelength space, the combined (output, maybe?) spectrum is just
+which is the maximum-likelihood or minimum-$\chi^2$ solution for a linear weighted least squares problem or a linear model with Gaussian noise (see, for example, \cite{hoggfitting}).
+And now if we choose a final (uniform, say) output pixel grid $x_\star$ in the rest-frame (unshifted) wavelength space, the combined spectrum is just
 \begin{align}
     y_\star &= X_\star\,\hat\theta ~,
 \end{align}
@@ -284,7 +309,7 @@ The naive uncertainty variances are the diagonals of this matrix (and not the in
 But, \emph{very importantly}, this is only a correct usage when the input $C_i$ matrices really represented the true uncertainties going in.
 If you have any concerns about that, then it is way safer to get your uncertainty estimates from bootstrap or jackknife \cite{hoggflexible}.
 
-In the end, most users want the combined spectrum $y_\star$ (plus the pixel positions $x_\star$ and uncertainty information).
+In the end, most users want the combined spectrum $y_\star$ (and perhaps the pixel positions $x_\star$, uncertainty information, and propagated meta data).
 Some users will additionally want (or want to reconstruct) the parameters $\hat\theta$ and the basis functions $g_j(x)$.
 For these reasons it often makes sense to set $M_\star\geq P$ such that the delivered $y_\star$ fully determines the parameters.
 But that's a detailed question about your users and your goals.
@@ -292,9 +317,9 @@ But that's a detailed question about your users and your goals.
 \paragraph{Implementation notes}
 Don't actually construct the very sparse $C_i$ matrices, just do pixel-wise multiplies.
 Don't use \texttt{inv()}, use \texttt{solve()} or \texttt{lstsq()}.
-Check your condition numbers before you go.
+Check your condition numbers.
 If $X$ is either very sparse (as it is in a b-spline basis) or Fourier (as it is in a sine-and-cosine basis) then there are very fast ways to do the linear algebra; research those.
-If you use the nufft, order your frequencies in the way the software wants, and deal with the complex numbers.
+If you use the non-uniform fast Fourier transform, order your frequencies in the way the software wants, and deal with the complex numbers.
 Specific choice of $L$ and $P$ and $M_\star$ in the Fourier case.
 
 \section{Experiments and results}\label{sec:results}
@@ -304,6 +329,8 @@ We demonstrate the effectiveness of the spectral combination method on artificia
 The spectral data were generated from a mean spectral expectation that is a continuum plus a randomly generated (not at all physical) line list, where each line equivalent width was set by a random draw from a power law.
 Each spectral epoch was given a velocity (Doppler shift) by putting the epochs equally spaced on a sinusoidal variation with a semi-amplitude of $30\,\kmps$ (to emulate the motion of the spectrograph with respect to the Solar System barycenter).
 The spectral expectation model is built on the assumption of a normalized (unit) continuum and unresolved spectral lines with a Gaussian line-spread function (LSF) with one-sigma width $1/R$, where $R=135\,000$ is the spectrograph resolution).
+
+ANDY: continuum-rectified (unit-less) ?
 
 The sampled data at each epoch were made by simply evaluating the spectral expectation model (shifted by the Doppler shift) at the pixel centers, such that the $R=135\,000$ LSF is effectively the pixel-convolved LSF.
 After sampling the mean spectral expectation model onto an observational pixel grid, Gaussian noise is added with a variance that grows linearly with expected flux, such that the signal-to-noise per pixel in the continuum has a definite known value in each epoch spectrum.
@@ -342,7 +369,7 @@ We didn't employ any data weighting; we treated every epoch as identical in term
     \includegraphics[width=\figurewidth]{notebooks/forward1.pdf}\\
     \includegraphics[width=\figurewidth]{notebooks/forward2.pdf}
     \end{center}
-    \caption{The top two panels show the result of running the Forward Model (tm) on the poorly sampled input data, plus the residual away from the truth. The bottom two panels show the same but for the well sampled input data. In each panel, the red line shows the true model used to generate the data.\label{fig:forward}}
+    \caption{The top two panels show the result of running the Forward Model (tm) on the poorly sampled input data, plus the residual away from the truth. The bottom two panels show the same but for the well sampled input data. In each panel, the red line shows the true model used to generate the data.\label{fig:forward} ANDY: THIS IS BEAUTIFUL}
     \end{mdframed}
 \end{figure}
 The combined spectrum resulting from the Forward Model (tm) described in \sectionname~\ref{sec:method} is shown in \figurename~\ref{fig:forward}.
@@ -363,6 +390,7 @@ This censorship of the bad pixels requires some attention:
 Naive interpolation of an integer (binary actually) bad-pixel mask $b_i$ will not deliver an integer mask $b'_i$.
 The conservative move (which we adopt) is to naively interpolate $b_i$ (also by the cubic spline) and then zero out any pixels that are significantly below unity.
 In general this substantially grows the binary mask, and reduces the amount of data available for combination.
+The non-conservative approach is just as bad: if we restrict the number (or fraction) of pixels in the combined spectrum to equal those in the individual epochs, we risk un-masking genuinely bad pixels while growing the binary mask elsewhere!
 
 \begin{figure}[t!]
     \begin{mdframed}\begin{center}
@@ -438,6 +466,7 @@ Code is available at HOGG THIS URL.
 
 \paragraph{Acknowledgements}
 It is a pleasure to thank
+Jon Holtzman (NMSU), 
 Matt Daunt (NYU),
 Dustin Lang (Perimeter),
 Adrian Price-Whelan (Flatiron),
