@@ -2,10 +2,11 @@
 
 % To-Do items
 % -----------
+% - Audit for rigid terminology. HOGG is currently liking ``combined spectrum'' for the model expectation, for example. And "standard practice" for the traditions of our field.
 % - Audit and fix the sign applied to $\Delta x_i$ everywhere. Wrong relative to code?
 % - Write about the two input-data cases.
 % - See bug list in code for other issues with the text--code relationship (noise model; line-formation model).
-% - Copy in a figure macro from Hogg & Villar and use it.
+% - Audit for its / it's. Hogg has issues with this.
 % - Deal with all HOGG, ANDY, ARC, XXX, YYY, CITE, etc.
 
 \documentclass[modern]{aastex631}
@@ -13,6 +14,7 @@
 \usepackage{amsmath}
 
 % page and document setup
+\renewcommand{\twocolumngrid}{}
 \addtolength{\topmargin}{-0.35in}
 \addtolength{\textheight}{0.6in}
 \setlength{\parindent}{3.5ex}
@@ -36,10 +38,9 @@
 \setlength{\figurewidth}{0.75\textwidth}
 
 % text macros
-\shorttitle{don't interpolate your data!}
-% Or...
-%\shorttitle{Binning is sinning!}
+\shorttitle{don't interpolate your data}
 \shortauthors{hogg \& casey}
+\newcommand{\documentname}{\textsl{Article}}
 \newcommand{\sectionname}{Section}
 
 % math macros
@@ -66,7 +67,7 @@
 When there are many observations of an astronomical source---many images with different dithers, or many spectra taken at different barycentric velocities---it is often tempting to shift and stack the data, to (for example) make a high signal-to-noise average image or mean spectrum.
 Bound-saturating measurements are made not by manipulating data, but instead by manipulating a likelihood function, where the data are treated as fixed, and model parameters are modified to fit the data.
 Traditional shifting and stacking of data can be converted into a model-fitting procedure, such that no data are ever harmed, and yet the output is the shift-adjusted mean.
-The key component of this conversion is a spectral model that is completely flexible but also a continuous function of wavelength (or position in the case of imaging) that can represent any signal being measured by the device after any reasonable translation.
+The key component of this conversion is a spectral model that is completely flexible but also a continuous function of wavelength (or position in the case of imaging) that can represent any signal being measured by the device after any reasonable translation (or rotation or field distortion).
 The benefits of a modeling approach are myriad:
 The sacred data never are modified.
 Noise maps, data gaps, and bad-data masks don't require interpolation.
@@ -103,8 +104,6 @@ In spectroscopy, in particular, high signal-to-noise spectral measurements are e
 Spectral combination methods that distort absorption (or emission) lines will translate into biases, errors, or increased variance in these measurements.
 Spectral combination methods that correlate the noise in the outputs will translate into increased variance, and necessitate more sophisticated downstream measurement techniques (which don't really exist at present).
 
-HOGG: Of course if your GOAL IS RV you should DO SOMETHING DIFFERENT.
-
 One of the great things about the standard practice---the simple process of shifting and stacking the data---is that this procedure makes almost no assumptions about what the output, combined image or spectrum will look like.
 It isn't really a ``model'' for the data; it is more like a ``summary'' of the data.
 When we switch to a statistical-inference framework, we have to choose some form or basis for expressing the combined image.
@@ -113,26 +112,31 @@ That means that the approach we take does not get its power from the choice of p
 Indeed it has just as much freedom as the shifting-and-stacking standard practice.
 The forward-modeling we recommend gets its power from the fact that it generates the data directly and without manipulation.
 
-The data are never manipulated when using an estimator, but the relationship between the per epoch observations (inputs) and `combined image' or `combined spectrum' (outputs) is identical to the input--output relationship of a shift-and-coadd approach.
-Unlike the shift-and-coadd approach, an estimator is insensitive to under- or poorly-sampled data (e.g., \textsl{APOGEE} raw data).
-As we will show, an estimator also yields a more faithful representation\footnote{
-    An estimator needs a \emph{model} to produce a combined spectrum, but we use the word \emph{representation} to avoid overloading the word `model', and to indicate that we will not construct a physical model of a spectrum from atomic physics.
-    We only need a flexible representation!
-}
-of the underlying \emph{true} spectrum, critically important for any subsequent precision measurements (e.g., radial velocities, chemical abundances).
+The data are never manipulated when using an estimator (in contrast to standard practice), but (for us) the functional requirements are the same as with standard practice:
+We consider here only procedures that start with the individual, single-epoch observations as inputs, along with noise estimates and bad-pixel masks; and we consider only procedures that end with an output ``combined image'' or ``combined spectrum'' that is a set of intensity of flux values on a pixel grid, along with uncertainty estimates.
+That is, the only difference between standard practice and the forward model that we advocate is the purely in the nature of the estimator.
+Unlike the shift-and-coadd approach, the estimator we will deliver will be insensitive to under- or poorly-sampled data, which is not uncommon when astronomical seeing accidentally gets excellent, or in spectrographs that have limited detector pixels (for example, \citealt{apogeehardware}).
+As we will show, an estimator also often yields a more faithful estimate of the \emph{true} spectrum, and almost always better noise properties.
+Both of these results make our results better for any subsequent precision measurements (e.g., radial velocities, chemical abundances).
+But importantly, we aren't proposing a change to the \emph{format} of the input or outputs of spectral or image combination.
 
+The ideas here aren't novel; many projects have avoided data interpolation previously.
+For one example, the \textsl{COMBO-17} survey (\citealt{combo17}) took many images of the sky in many bands, and did not co-add the data prior to making measurements, in part to avoid mixing different point-spread functions and pixel samplings.
+For another, what we propose below is actually a sub-problem of the problem solved by the \textsl{wobble} method for determining stellar radial velocities (\citealt{wobble}); \textsl{wobble} is more general because it also includes a tellurics model and also tellurics and stellar variability models.
+Plus it learns (it isn't told) the epoch-to-epoch spectral shifts.
+There is a heritage for what's presented here in the ``optimal extraction'' literature (for example, \citealt{oe}, \citealt{froe}, \citealt{sp}):
+Optimal extraction is an unfortunate name for the process of extracting a one-dimensional spectral signal from a two-dimensional spectrograph image when that extraction proceeds by forward modeling the two-dimensional data.
+One amusing point, which is out of scope here, is that if the data that are being combined are extracted one-dimensional spectra, and those are, in turn, optimal extractions, then there is a better method that moves this spectral combination method directly into the two-dimensional data.
+We hope for a future in which one-dimensional spectra are never extracted from two-dimensional images; in this future the two-dimensional data are the sacred data, not the extractions.
 
+In real applications, the spectra we extract are often of variable sources, or taken at different position angles on extended objects, such that we don't expect each epoch to be identical.
+Similarly, the \textsl{LSST} data are being taken the way they because the sky (and point-spread function) will vary.
+That means that we are only considering here the very easiest case.
+However, we note that all standard shift-and-coadd methods make these non-variable assumptions implicitly.
+Part of our contribution in this \documentname{} is to make implicit assumptions explicit, in \sectionname~\ref{sec:assumptions}.
 
-Things to emphasize here and below:
-\begin{itemize}
-    \item Maybe move this to the method section? People have a lot of hangups about the word ``model''. We have to use another word, or be very very careful how we use this word. For instance, some people I talked to about this thought I meant a physical model of the spectrum starting with atomic physics!
-    \item All this is even more important in ill-sampled contexts than well-sampled contexts. See, for example, \textsl{APOGEE} raw data!
-\item We should choose a rigid terminology and stick to it here. HOGG is currently liking ``combined spectrum'' for the model expectation.
-\item This problem is a sub-problem of \textsl{wobble} \cite{wobble}.
-\item The problem we solve here is the easy case. In the hard case, there is a slit, and the object is extended, and different observations are at different slit angles, different slit positions, and with different atmospheric seeing. That problem is a hard problem! But it probably solves the same way. Say a bit here and more in the discussion.
-\end{itemize}
-
-Most important: Say here why you should never want to do this at all!
+HOGG: Most important: Say here why you should never want to do this at all!
+Comment on a spectrum being too low in s/n to measure a Na line...!!
 
 \section{Concepts and assumptions}\label{sec:assumptions}
 
@@ -148,8 +152,8 @@ The different observations are made at different relative velocities (star minus
 \paragraph{Shift operators}
 Because the shifts might be non-linear, the shifts $\Delta x_i$ won't be pure numbers but something more like shift operators.
 That is, if there were a true spectrum $\tilde{y}$, each individual noisy image $y_i$ would be related to that true spectrum by a shift operator acting on that true spectrum, plus noise.
-We will begin by assuming that (from some external information) we know these shift operators very accurately.
-At the end we may (do we?) return to the question of how those shift operators are determined. ANDY: SMASH! Out of scope!
+We will assume here that (from some external information) we know these shift operators very accurately.
+This is often not true, of course; we will return to this point in the discussion.
 
 \paragraph{Wavelength calibration}
 We will assume that, for every $m_i$-pixel image $y_i$ we also have a $m_i$-vector (or list) $x_i$ of pixel positions, such that each element of $x_i$ gives an accurate and precise value for the wavelength (or position in the spectrograph, in some settings) for each pixel of the image $y_i$.
@@ -185,7 +189,9 @@ We consider only the PCLSF, because then the sampling by the detector pixels doe
 That is, when the PCLSF is used to model a spectrum, the projection onto the pixels is just a sampling of the function at the pixel centers, and does not involve any convolution over the face of the pixel.
 All that said, we won't explicitly model or use the PCLSF in what follows; we will just assume that our continuous spectral model is a model for the pixel-convolved, finite-resolution spectrum; we won't be doing any convolutions in comparing models and data.
 
-HOGG: Something about the LSF being different in different exposures!
+In many cases the LSF or PSF is actually substantially different in different exposures.
+This leads to spectral (or image) variations, and violate the assumptions of this model (and also the implicit assumptions underlying standard practice).
+We won't address this kind of variability here, except in some discussion at the end.
 
 \paragraph{Continuous spectral model} 
 In what follows we are going to avoid interpolating the \emph{data} by having a spectral \emph{model} that can be arbitrarily and losslessly interpolated.
@@ -216,10 +222,11 @@ More on this below.
 Because of considerations related to the Nyquist frequency on a uniform grid, it is valuable for a spectrograph to have a pixel spacing on the device that is smaller than the width of the PCLSF.
 Specifically, it is valuable for there to be two or three pixels across the full-width at half-maximum (FWHM) of the PCLSF.
 This keeps the band-limited part of the spectroscopic signal well-sampled in the data.
-There are spectrograph that don't have pixel scales this fine \cite{apogeehardware}; in these cases what we are proposing here is even more important than it is in the well-sampled case.
+There are spectrograph that don't have pixel scales this fine (for example, \textsl{APOGEE} \citealt{apogee}); in these cases what we are proposing here is \emph{even more important} than it is in the well-sampled case.
+This will become obvious in the experiments below.
 
 \paragraph{Non-uniform fast Fourier transform}
-In the special case that the spectral model is a Fourier series, there are very useful and fast tools for interpolation, including especially the non-uniform fast Fourier transform (for example, \cite{finufft}).
+In the special case that the spectral model is a Fourier series, there are very useful and fast tools for interpolation, including especially the non-uniform fast Fourier transform (for example, \citealt{finufft}).
 
 \paragraph{Time variability}
 When we average data (or build a static model of multi-epoch data), we are implicitly assuming that there is no intrinsic variability to the source being observed.
@@ -233,8 +240,7 @@ In what follows, we will assume that the input data are well calibrated in vario
 In particular, we will assume that the images or spectra have been bias-corrected, sky-subtracted, flat-fielded, and tellurics-corrected sufficiently well that the different observations $y_i$ can be seen as observations of the same underlying or intrinsic signal.
 Alternatively, the input data might be continuum-normalized or pseudo-continuum-normalized.
 Again, the assumption is that the different calibrated or processed observations are of the same underlying signal.
-
-ANDY: Should we mention something about if it is not telluric corrected, and you have many epochs of a source that has perceived radial velocity variations, then you want something like wobble?
+If there are multiple signals participating, the model would have to expand into something like \textsl{wobble} (\citealt{wobble}).
 
 \section{Method}\label{sec:method}
 
@@ -278,7 +284,6 @@ In what follows, somewhat arbitrarily, we will use a Fourier basis, which can be
 where $L$ is a (long) length-scale in the $x$ space (the log-wavelength space), and $1\leq j\leq P$.
 
 Now for the method:
-% ANDY: this used to say "We stack" and it triggered me because I just read 7 pages about how we shouldn't "stack"!
 We append all of the observations $y_i$ into one huge $M$-pixel list $Y$, where $M=\sum_{i=1}^N M_i$.
 We make a $M\times M$ block-diagonal matrix $C^{-1}$ from all the individual inverse variance matrices $C_i^{-1}$.
 We make a $M\times P$ design matrix $X$ which is the evaluation of all the $P$ basis functions at all the pixel locations in all of the $x_i$.
@@ -286,7 +291,7 @@ Once we have these things, the best-fit parameters $\hat\theta$ are
 \begin{align}
     \hat\theta &= (X^\top\,C^{-1}\,X)^{-1}\,X^\top\,C^{-1}\,Y ~,
 \end{align}
-which is the maximum-likelihood or minimum-$\chi^2$ solution for a linear weighted least squares problem or a linear model with Gaussian noise (see, for example, \cite{hoggfitting}).
+which is the maximum-likelihood or minimum-$\chi^2$ solution for a linear weighted least squares problem or a linear model with Gaussian noise (see, for example, \citealt{fitting}).
 And now if we choose a final (uniform, say) output pixel grid $x_\star$ in the rest-frame (unshifted) wavelength space, the combined spectrum is just
 \begin{align}
     y_\star &= X_\star\,\hat\theta ~,
@@ -307,7 +312,7 @@ The information-theoretic answer is that the covariance matrix $C_\star$ deliver
 \end{align}
 The naive uncertainty variances are the diagonals of this matrix (and not the inverses of the diagonals of its inverse).
 But, \emph{very importantly}, this is only a correct usage when the input $C_i$ matrices really represented the true uncertainties going in.
-If you have any concerns about that, then it is way safer to get your uncertainty estimates from bootstrap or jackknife \cite{hoggflexible}.
+If you have any concerns about that, then it is way safer to get your uncertainty estimates from bootstrap or jackknife (\citealt{fittingflexible}).
 
 In the end, most users want the combined spectrum $y_\star$ (and perhaps the pixel positions $x_\star$, uncertainty information, and propagated meta data).
 Some users will additionally want (or want to reconstruct) the parameters $\hat\theta$ and the basis functions $g_j(x)$.
@@ -330,7 +335,7 @@ The spectral data were generated from a mean spectral expectation that is a cont
 Each spectral epoch was given a velocity (Doppler shift) by putting the epochs equally spaced on a sinusoidal variation with a semi-amplitude of $30\,\kmps$ (to emulate the motion of the spectrograph with respect to the Solar System barycenter).
 The spectral expectation model is built on the assumption of a normalized (unit) continuum and unresolved spectral lines with a Gaussian line-spread function (LSF) with one-sigma width $1/R$, where $R=135\,000$ is the spectrograph resolution).
 
-ANDY: continuum-rectified (unit-less) ?
+ANDY: continuum-rectified (unit-less) ?  HOGG: THE LINE FORMATION MODEL DESCRIBED ABOVE IS NOT RIGHT.
 
 The sampled data at each epoch were made by simply evaluating the spectral expectation model (shifted by the Doppler shift) at the pixel centers, such that the $R=135\,000$ LSF is effectively the pixel-convolved LSF.
 After sampling the mean spectral expectation model onto an observational pixel grid, Gaussian noise is added with a variance that grows linearly with expected flux, such that the signal-to-noise per pixel in the continuum has a definite known value in each epoch spectrum.
@@ -369,7 +374,7 @@ We didn't employ any data weighting; we treated every epoch as identical in term
     \includegraphics[width=\figurewidth]{notebooks/forward1.pdf}\\
     \includegraphics[width=\figurewidth]{notebooks/forward2.pdf}
     \end{center}
-    \caption{The top two panels show the result of running the Forward Model (tm) on the poorly sampled input data, plus the residual away from the truth. The bottom two panels show the same but for the well sampled input data. In each panel, the red line shows the true model used to generate the data.\label{fig:forward} ANDY: THIS IS BEAUTIFUL}
+    \caption{The top two panels show the result of running the Forward Model (tm) on the poorly sampled input data, plus the residual away from the truth. The bottom two panels show the same but for the well sampled input data. In each panel, the red line shows the true model used to generate the data.\label{fig:forward} ANDY: THIS IS BEAUTIFUL. HOGG SAY: I KNOW!}
     \end{mdframed}
 \end{figure}
 The combined spectrum resulting from the Forward Model (tm) described in \sectionname~\ref{sec:method} is shown in \figurename~\ref{fig:forward}.
@@ -436,41 +441,87 @@ That's one of a few reasons we like $P=M$.
 
 Give some summary of the above.
 
-What happens if you don't know your shifts?
+In the Introduction, we were agnostic about whether we were talking about imaging or spectroscopic data.
+In the end, our examples are spectroscopic.
+What differences are there between these cases?
+The main difference is that there are many more ``shift'' parameters for imaging than spectroscopy:
+Two spectra (according to our assumptions) differ only (or primarily) in terms of a one-dimensional Doppler shift with respect to pixels that are located in one dimension (the wavelength direction).
+Imaging epochs, on the other hand, can differ in terms of two shifts and a rotation, or (equivalently) three Euler angles.
+And, since every pixel has its own two-dimensional position, the problem of locating pixels in an image is generally harder than the problem of locating pixels in an extracted spectrum.
+That is, the imaging case is generally more difficult.
+But it is not different, conceptually, from what is presented above.
 
-What happens if you have multiple shifting signals?
-\texttt{wobble} \cite{wobble} is a solution to one version of that problem.
+Everything presented above depends on a set of strong assumptions, listed in \sectionname~\ref{sec:assumptions}.
+Perhaps the strongest assumption is that the spectrum or image is not a function of time.
+That is, each epoch spectrum or image is a sampling of the same underlying, true signal.
+This assumption can be wrong for a myriad of reasons:
+The source can vary, the instrument can vary, there can be variable foregrounds or backgrounds, and there can be mistakes or variations in calibration or data processing.
+All of these things happen in real data sets.
 
-What happens if your data aren't continuum normalized properly?
+There are (at least) three attitudes for an investigator to take in the face of variations in the data, from epoch to epoch or exposure to exposure:
+The first is that the procedures we design are designed to deliver the exposure (or signal-to-noise-squared) weighted mean of the observed epochs.
+That is, the fact that the data are varying does not mean that the methodology needs to be modified; without modification, the procedures given above---both the Forward Model (tm) and the Standard Practice (tm)---will produce something like the mean spectrum.
 
-We assumed no sky subtraction necessary. What gives?
+The second attitude to take---and the necessary attitude for many projects---is that the variations must be accounted for, by complexifying the forward model.
+For example, if there is a varying line-spread function between epochs (as there is for the \textsl{APOGEE} spectrograph, because the LSF is a function of the slit position of the optical fiber), then in addition to a shift at each epoch there is also an LSF adjustment at each epoch.
+The LSF adjustment is then applied to the spectral model before it is compared to each epoch of data, just as the shift is applied in the current methodological scope.
+Similar model adustments can account for intrinsic spectral variations, additive or multiplicative nuisance signals in the data (like backgrounds or telluric absorptions), and mistakes in data pre-processing (like continuum modeling errors).
 
-How do you modify to deal with LSF variations (like we have in \textsl{SDSS-V APOGEE}?
-What if you don't know the LSF differences?
-Difference between modeling LSF changes and modeling LSFs. The former is good, the latter is bad.
+One side note about epoch-to-epoch variations in instrument or data-processing parameters:
+It is usually a good idea to model not the full instrument or data properties (as does \citealt{sp}) if that can be avoided, but rather just the \emph{differences} in instrument or data properties from one epoch to the next, taking those differences away from some fiducial data or instrument state.
+In the case of the LSF, for example, that obviates the need to model the infinite-resolution spectrum; the spectrum only needs to be modeled at fiducial resolution and convolved to other resolutions with difference kernels.
 
-Discuss time-variable inputs, and how you would modify to deal with that.
-One way involves modeling the time variability with some process.
-Another way involves ignoring it and just getting the average anyway!
+Although \emph{conceptually} changes to account for data variability aren't that big, \emph{in practice} they can be very hard to implement.
+For one, the method we have presented assumes that we \emph{know} the individual epoch shifts \textsl{a priori}, and all new epoch-to-epoch adjustments would also depend on per-epoch housekeeping data or parameters that might, in practice, be hard to know.
+That brings us to the third attitude that the investigator can take.
+What's presented above can be seen as a model for the \emph{mean} of the process that generates individual-epoch spectra; that is the first term in an expansion of moments.
+The next term would be the \emph{variance} of the process.
+That is, a more sophisticated model could have not just $P$ parameters for the mean spectrum, but additionally $P'$ parameters for a variance model.
+If the variance is low dimensional, or sparse, or compact in important ways, there should be very effective models of this form.
+For example, we could imagine forward-modeling generalizations of some of sparse methods (for example, \citealt{candes}) for applications in which the variability is localized in time or space; or we could imagine generalizations of matrix factorizations (for example, \citealt{hmf}) for applications in which variability is low dimensional (the \textsl{wobble} method has some such functionality; \citealt{wobble}).
+
+All the above considerations of variability bring us to another of our strong assumptions:
+We have assumed that we know the shifts $\Delta x_i$ exactly.
+In practice, we rarely do, or maybe more accurately: We rarely know them as well as we could know them, in principle.
+When the shifts $\Delta x_i$ are not known, or not known accurately enough, we recommend a simultaneous-fitting procedure, in which the shifts are learned at the same time as the combined spectrum is estimated or inferred.
+This can be achieved through a challenging nonlinear optimization, or through an iteration of linearized optimizations, alternating improvements to the combined spectrum and improvements to the shifts.
+This is, more or less, how the \textsl{wobble} system works (\citealt{wobble}).
+
+We assumed no sky subtraction necessary. No tellurics. What gives if you have multiple shifting signals. Causal structure. etc.
 
 What about non-Gaussian noise?
-
-What about data from different instruments with different LSFs / PSFs? What about data with different pixel scales? What about data with unknown wavelength calibration?
 
 Code is available at HOGG THIS URL.
 
 \paragraph{Software}
-\texttt{numpy} \cite{numpy} ---
-\texttt{finufft} \cite{finufft} ---
-\texttt{matplotlib} \cite{matplotlib}.
+\texttt{numpy} \citep{numpy} ---
+\texttt{matplotlib} \citep{matplotlib}.
 
 \paragraph{Acknowledgements}
 It is a pleasure to thank
-Jon Holtzman (NMSU), 
+Mike Blanton (NYU),
 Matt Daunt (NYU),
+Jon Holtzman (NMSU), 
 Dustin Lang (Perimeter),
 Adrian Price-Whelan (Flatiron),
 and the Astronomical Data Group at the Flatiron Institute,
-for valuable discussions.
+for valuable discussions and input.
+
+\begin{thebibliography}{dummy}
+\bibitem[Barnett et al.(2019)]{finufft}
+Barnett, A. H., Magland, J. F., \& af~Klinteberg, L., 2019, SIAM J. Sci. Comput. 41(5), C479
+\bibitem[Bedell et al.(2019)]{wobble} Bedell, M., Hogg, D.~W., Foreman-Mackey, D., et al.\ 2019, \aj, 158, 164. doi:10.3847/1538-3881/ab40a7
+\bibitem[Bolton \& Schlegel(2010)]{sp} Bolton, A.~S. \& Schlegel, D.~J.\ 2010, \pasp, 122, 248. doi:10.1086/651008
+\bibitem[Harris et al.(2020)]{numpy} Harris, C.~R., Millman, K.~J., van der Walt, S.~J., et al.\ 2020, \nat, 585, 357. doi:10.1038/s41586-020-2649-2
+\bibitem[Hewett et al.(1985)]{oe} Hewett, P.~C., Irwin, M.~J., Bunclark, P., et al.\ 1985, \mnras, 213, 971. doi:10.1093/mnras/213.4.
+\bibitem[Hogg et al.(2010)]{fitting} Hogg, D.~W., Bovy, J., \& Lang, D.\ 2010, arXiv:1008.4686
+\bibitem[Hogg \& Villar(2021)]{fittingflexible} Hogg, D.~W. \& Villar, S.\ 2021, \pasp, 133, 093001. doi:10.1088/1538-3873/ac20ac
+\bibitem[Hunter(2007)]{matplotlib} Hunter, J.~D.\ 2007, Computing in Science and Engineering, 9, 90. doi:10.1109/MCSE.2007.55
+\bibitem[Ivezi{\'c} et al.(2019)]{lsst} Ivezi{\'c}, {\v{Z}}., Kahn, S.~M., Tyson, J.~A., et al.\ 2019, \apj, 873, 111. doi:10.3847/1538-4357/ab042c
+\bibitem[Majewski et al.(2017)]{apogee} Majewski, S.~R., Schiavon, R.~P., Frinchaboy, P.~M., et al.\ 2017, \aj, 154, 94. doi:10.3847/1538-3881/aa784d
+\bibitem[Williams et al.(1996)]{hdf} Williams, R.~E., Blacker, B., Dickinson, M., et al.\ 1996, \aj, 112, 1335. doi:10.1086/118105
+\bibitem[Wolf et al.(2003)]{combo17} Wolf, C., Meisenheimer, K., Rix, H.-W., et al.\ 2003, \aap, 401, 73. doi:10.1051/0004-6361:20021513
+\bibitem[Zechmeister et al.(2014)]{froe} Zechmeister, M., Anglada-Escud{\'e}, G., \& Reiners, A.\ 2014, \aap, 561, A59. doi:10.1051/0004-6361/201322746
+\end{thebibliography}
 
 \end{document}
