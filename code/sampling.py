@@ -41,7 +41,7 @@ def sample_combined_spectrum(
         pre-computed:
 
         ```python
-        design_matrix = construct_design_matrix(wavelength, P)
+        design_matrix = construct_design_matrix(wavelength, P, L)
         ```
 
         If you supply a pre-computed ``design_matrix``, make sure you also give the ``wavelength``
