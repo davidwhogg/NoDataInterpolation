@@ -23,12 +23,14 @@ def resample_spectrum(
     Sample a spectrum on a wavelength array given a set of pixels recorded from one or many visits.
     
     :param resample_wavelength:
-        A ``N``-length array of wavelengths to sample the spectrum on. In the paper, this is equivalent 
+        A ``M_star``-length array of wavelengths to sample the spectrum on. In the paper, this is equivalent 
         to the output-spectrum pixel grid $x_\star$.
 
     :param wavelength:
-        A ``M``-length array of wavelengths from individual visits. In the paper, this is equivalent to 
-        the input-spectrum pixel grid $x_i$.
+        A ``M``-length array of wavelengths from individual visits. If you have $N$ spectra where 
+        the $i$th spectrum has $m_i$ pixels, then $M = \sum_{i=1}^N m_i$, and this array represents a
+        flattened 1D array of all wavelength positions. In the paper, this is equivalent to the 
+        input-spectrum pixel grid $x_i$.
     
     :param flux:
         A ``M``-length array of flux values from individual visits. In the paper, this is equivalent to 
