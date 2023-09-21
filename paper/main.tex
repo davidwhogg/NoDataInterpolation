@@ -53,7 +53,9 @@
 \sloppy\sloppypar\raggedbottom\frenchspacing
 \begin{document}
 
-\title{\Huge Don't interpolate your data!}
+\title{\Huge Don't interpolate the data!}
+% ARC: I changed this to "Don't interpolate the data!"? because you can't like, own data, man.
+% (but you can change it back if you prefer)
 
 \author[0000-0003-2866-9403]{David W. Hogg}
 \affiliation{Center for Cosmology and Particle Physics, Department of Physics, New York University}
@@ -62,6 +64,7 @@
 
 \author[0000-0003-0174-0564]{Andrew R. Casey}
 \affiliation{School of Physics \& Astronomy, Monash University}
+\affiliation{Centre of Excellence for Astrophysics in Three Dimensions (ASTRO-3D)}
 
 \begin{abstract}\noindent
 When there are many observations of an astronomical source---many images with different dithers, or many spectra taken at different barycentric velocities---it is often tempting to shift and stack the data, to (for example) make a high signal-to-noise average image or mean spectrum.
@@ -92,11 +95,10 @@ the \textsl{APOGEE} spectroscopic survey (\citealt{apogee}),
 and the future Rubin Observatory \textsl{LSST} (\citealt{lsst}), among countless other projects.
 
 Is it astronomical blasphemy to say that this practice is \emph{wrong?}
-It is wrong because minimum-variance unbiased estimators require care in their construction; they are (often) maximum-likelihood estimators (\citealt{something}).
+It is wrong because minimum-variance unbiased estimators require care in their construction; they are (often) maximum-likelihood estimators (\citealt{something}). % HOGG
 The deep, high signal-to-noise image or spectrum we seek is a statistical estimate of the image or spectrum, given the noisy data of the individual exposures.
 Noisy data are combined to make a measurement by building and optimizing a likelihood, not by shifting and stacking the input data.
-Of course we don't always think of an image or a spectrum of the sky as the result of applying an \emph{estimator},
-but it is.
+Of course we don't always think of an image or a spectrum of the sky as the result of applying an \emph{estimator}, but it is.
 It is just a simultaneous estimate of a lot of different components (a lot of different pixels; all the pixels in the combined image or spectrum).
 
 We are in a period in astrophysics in which exceedingly precise measurements are expected, in both imaging and spectroscopy projects.
@@ -113,7 +115,7 @@ Indeed it has just as much freedom as the shifting-and-stacking standard practic
 The forward-modeling we recommend gets its power from the fact that it generates the data directly and without manipulation.
 
 The data are never manipulated when using an estimator (in contrast to standard practice), but (for us) the functional requirements are the same as with standard practice:
-We consider here only procedures that start with the individual, single-epoch observations as inputs, along with noise estimates and bad-pixel masks; and we consider only procedures that end with an output ``combined image'' or ``combined spectrum'' that is a set of intensity of flux values on a pixel grid, along with uncertainty estimates.
+We consider here only procedures that start with the individual, single-epoch observations as inputs, along with noise estimates, bad-pixel masks, and perhaps metadata flags; and we consider only procedures that end with an output ``combined image'' or ``combined spectrum'' that is a set of intensity of flux values on a pixel grid, along with uncertainty estimates and metadata flags.
 That is, the only difference between standard practice and the forward model that we advocate is the purely in the nature of the estimator.
 Unlike the shift-and-coadd approach, the estimator we will deliver will be insensitive to under- or poorly-sampled data, which is not uncommon when astronomical seeing accidentally gets excellent, or in spectrographs that have limited detector pixels (for example, \citealt{apogeehardware}).
 As we will show, an estimator also often yields a more faithful estimate of the \emph{true} spectrum, and almost always better noise properties.
