@@ -122,6 +122,11 @@ As we will show, an estimator also often yields a more faithful estimate of the 
 Both of these results make our results better for any subsequent precision measurements (e.g., radial velocities, chemical abundances).
 But importantly, we aren't proposing a change to the \emph{format} of the input or outputs of spectral or image combination.
 
+% Hogg's email epiphany:
+% 1. I think I figured out what Blanton means by saying that interpolation of the data is a kind of fitting. It is! But those fits can’t be combined well because the fits are infinitely over-parameterized. If the interpolation was done approximately with a finite-parameter fit, we could interpolate and then average just fine. I’m writing this here to remind myself of this epiphany for when I come back online and write a subsection about this in the paper.
+
+% Hogg: what do you want to do about this?
+
 The approach we propose differs from interpolation in a subtle way. 
 Interpolation could be described as computing new values at arbitrary positions based on an exising set of known data points. 
 Instead, here we propose to construct a continuous spectral model for the data, where we then evaluate that model on the given set of output positions (pixels).
@@ -491,11 +496,13 @@ When the shifts $\Delta x_i$ are not known, or not known accurately enough, we r
 This can be achieved through a challenging nonlinear optimization, or through an iteration of linearized optimizations, alternating improvements to the combined spectrum and improvements to the shifts.
 This is, more or less, how the \textsl{wobble} system works (\citealt{wobble}).
 
-We assumed no sky subtraction necessary. No tellurics. What gives if you have multiple shifting signals. Causal structure. etc.
+% What about non-Gaussian noise?
 
-What about non-Gaussian noise?
+We assumed that the noise was Gaussian, but this is not always true of astronomical data.
+In the case of Poisson noise that is not background dominated, the variance tensor $C_i$ will be biased, and all our assumptions about additive Gaussian variance will be broken. % ARC: what else should we say about this?
 
-Code is available at HOGG THIS URL.
+
+Code is available at \url{https://github.com/davidwhogg/NoDataInterpolation} and is registered in the Python Package Index as \texttt{NoDataInterpolation}.
 
 \paragraph{Software}
 \texttt{numpy} \citep{numpy} ---
