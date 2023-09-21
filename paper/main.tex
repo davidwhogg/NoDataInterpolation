@@ -1,4 +1,4 @@
-% Copyright 2022 David W. Hogg (NYU) and Andy Casey (Monash)
+% Copyright 2022, 2023 David W. Hogg (NYU) and Andy Casey (Monash)
 
 % To-Do items
 % -----------
@@ -8,6 +8,7 @@
 % - See bug list in code for other issues with the text--code relationship (noise model; line-formation model).
 % - Audit for its / it's. Hogg has issues with this.
 % - Deal with all HOGG, ANDY, ARC, XXX, YYY, CITE, etc.
+% - Blanton sent an email with comments.
 
 \documentclass[modern]{aastex631}
 \usepackage[utf8]{inputenc}
@@ -67,12 +68,12 @@
 When there are many observations of an astronomical source---many images with different dithers, or many spectra taken at different barycentric velocities---it is often tempting to shift and stack the data, to (for example) make a high signal-to-noise average image or mean spectrum.
 Bound-saturating measurements are made not by manipulating data, but instead by manipulating a likelihood function, where the data are treated as fixed, and model parameters are modified to fit the data.
 Traditional shifting and stacking of data can be converted into a model-fitting procedure, such that no data are ever harmed, and yet the output is the shift-adjusted mean.
-The key component of this conversion is a spectral model that is completely flexible but also a continuous function of wavelength (or position in the case of imaging) that can represent any signal being measured by the device after any reasonable translation (or rotation or field distortion).
+The key component of this conversion is an image (or spectrum) model that is completely flexible but also a continuous function of position (or wavelength) that can represent any signal being measured by the device after any reasonable translation (or rotation or field distortion).
 The benefits of a modeling approach are myriad:
 The sacred data never are modified.
 Noise maps, data gaps, and bad-data masks don't require interpolation.
-The output can take the form of a spectrum evaluated on a pixel grid, as is traditional.
-The noise in the output spectrum becomes uncorrelated across neighboring pixels. 
+The output can take the form of an image or spectrum evaluated on a standardized pixel grid, as is traditional.
+The uncertainties in the output become uncorrelated across neighboring pixels. 
 The only cost is a small increase in computational complexity.
 We demonstrate all of these things with a small data example and we provide open-source sample code for re-use.
 \end{abstract}
@@ -321,11 +322,11 @@ But that's a detailed question about your users and your goals.
 
 \paragraph{Implementation notes}
 Don't actually construct the very sparse $C_i$ matrices, just do pixel-wise multiplies.
-Don't use \texttt{inv()}, use \texttt{solve()} or \texttt{lstsq()}.
+Don't use \texttt{inv()}; use \texttt{solve()} or \texttt{lstsq()}.
 Check your condition numbers.
 If $X$ is either very sparse (as it is in a b-spline basis) or Fourier (as it is in a sine-and-cosine basis) then there are very fast ways to do the linear algebra; research those.
 If you use the non-uniform fast Fourier transform, order your frequencies in the way the software wants, and deal with the complex numbers.
-Specific choice of $L$ and $P$ and $M_\star$ in the Fourier case.
+HOGG: Specific choice of $L$ and $P$ and $M_\star$ in the Fourier case.
 
 \section{Experiments and results}\label{sec:results}
 
@@ -499,11 +500,12 @@ Code is available at HOGG THIS URL.
 
 \paragraph{Acknowledgements}
 It is a pleasure to thank
-Mike Blanton (NYU),
-Matt Daunt (NYU),
-Jon Holtzman (NMSU), 
-Dustin Lang (Perimeter),
-Adrian Price-Whelan (Flatiron),
+  Mike Blanton (NYU),
+  Matt Daunt (NYU),
+  Jon Holtzman (NMSU), 
+  Jennifer Johnson (OSU),
+  Dustin Lang (Perimeter),
+  Adrian Price-Whelan (Flatiron),
 and the Astronomical Data Group at the Flatiron Institute,
 for valuable discussions and input.
 
