@@ -1,7 +1,15 @@
-% Copyright 2022 David W. Hogg (NYU) and Andy Casey (Monash)
+% Copyright 2022, 2023, [add your years here] David W. Hogg (NYU) and Andy Casey (Monash)
 
 % To-Do items
 % -----------
+% - Change the tone to "here's a method; it is principled and has great properties" and remove all suggestion that it is THE BEST THING.
+% - Put in notes about our hypothesis for WHY we get uncorrelated pixels.
+% - Blanton asks: Is this identical to sinc shift and average? Hogg thinks it MIGHT be.
+% - Add Hogg response to Blanton: Interpolate with (say) cubic spline and then average is NOT THE SAME as fit all the data simultaneously with a cubic spline function on a particular set of knots.
+% - Dustin asks: Is this effectively producing a sinc LSF? Hogg thinks it DEFINITELY IS NOT. Explain why not in the text.
+% - Hogg notes: Is it clear in the text that we are taking everything to a standard instrument? And the user can decide what that instrument is? That isn't in our current implementation, but it COULD BE. Discussion point?
+% - Related Hogg issue: Any latent spectrum (like our combined spectrum) should be something that COULD BE OBSERVED by some instrument in the future. Hence spectro-perfectionism is wrong (ish).
+% - Read and cite the DESI spectral pipeline paper; Dustin says it's relevant.
 % - Audit for rigid terminology. HOGG is currently liking ``combined spectrum'' for the model expectation, for example. And "standard practice" for the traditions of our field.
 % - Audit and fix the sign applied to $\Delta x_i$ everywhere. Wrong relative to code?
 % - Write about the two input-data cases.
@@ -53,9 +61,7 @@
 \sloppy\sloppypar\raggedbottom\frenchspacing
 \begin{document}
 
-\title{\Huge Don't interpolate the data!}
-% ARC: I changed this to "Don't interpolate the data!"? because you can't like, own data, man.
-% (but you can change it back if you prefer)
+\title{\Large Don't interpolate the data!}
 
 \author[0000-0003-2866-9403]{David W. Hogg}
 \affiliation{Center for Cosmology and Particle Physics, Department of Physics, New York University}
