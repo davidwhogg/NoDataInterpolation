@@ -4,6 +4,8 @@
 % -----------
 % - Change the tone to "here's a method; it is principled and has great properties" and remove all suggestion that it is THE BEST THING.
 % - Put in notes about our hypothesis for WHY we get uncorrelated pixels.
+% - Make comments directly about Drizzle to justify the name.
+% - discuss conservation of flux vs intensity.
 % - Blanton asks: Is this identical to sinc shift and average? Hogg thinks it MIGHT be.
 % - Add Hogg response to Blanton: Interpolate with (say) cubic spline and then average is NOT THE SAME as fit all the data simultaneously with a cubic spline function on a particular set of knots.
 % - Dustin asks: Is this effectively producing a sinc LSF? Hogg thinks it DEFINITELY IS NOT. Explain why not in the text.
@@ -61,7 +63,7 @@
 \sloppy\sloppypar\raggedbottom\frenchspacing
 \begin{document}
 
-\title{\Large Don't interpolate the data!}
+\title{\large Fowizzle: Combining spectra or images by forward modeling}
 
 \author[0000-0003-2866-9403]{David W. Hogg}
 \affiliation{Center for Cosmology and Particle Physics, Department of Physics, New York University}
@@ -73,17 +75,18 @@
 \affiliation{Centre of Excellence for Astrophysics in Three Dimensions (ASTRO-3D)}
 
 \begin{abstract}\noindent
-When there are many observations of an astronomical source---many images with different dithers, or many spectra taken at different barycentric velocities---it is often tempting to shift and stack the data, to (for example) make a high signal-to-noise average image or mean spectrum.
-Bound-saturating measurements are made not by manipulating data, but instead by manipulating a likelihood function, where the data are treated as fixed, and model parameters are modified to fit the data.
-Traditional shifting and stacking of data can be converted into a model-fitting procedure, such that no data are ever harmed, and yet the output is the shift-adjusted mean.
+When there are many observations of an astronomical source---many images with different dithers, or many spectra taken at different barycentric velocities---it is standard practice to shift and stack the data, to (for example) make a high signal-to-noise average image or mean spectrum.
+Bound-saturating measurements are made by manipulating a likelihood function, where the data are treated as fixed, and model parameters are modified to fit the data.
+Traditional shifting and stacking of data can be converted into a model-fitting procedure, such that the data are not modified, and yet the output is the shift-adjusted mean.
 The key component of this conversion is a spectral model that is completely flexible but also a continuous function of wavelength (or position in the case of imaging) that can represent any signal being measured by the device after any reasonable translation (or rotation or field distortion).
 The benefits of a modeling approach are myriad:
 The sacred data never are modified.
 Noise maps, data gaps, and bad-data masks don't require interpolation.
-The output can take the form of a spectrum evaluated on a pixel grid, as is traditional.
-The noise in the output spectrum becomes uncorrelated across neighboring pixels. 
+The output can take the form of an image or spectrum evaluated on a pixel grid, as is traditional.
+In addition to shifts, the model can account for line-spread or point-spread function variations, world-coordinate-system variations, and calibration or normalization variations.
+The noise in the output becomes uncorrelated across neighboring pixels as the shifts deliver good coverage in some sense.
 The only cost is a small increase in computational complexity.
-We demonstrate all of these things with a small data example and we provide open-source sample code for re-use.
+We demonstrate the method with a small data example and we provide open-source sample code for re-use.
 \end{abstract}
 
 \keywords{Foo --- Bar --- HOGG}
@@ -99,11 +102,14 @@ We then shift and average (maybe median?) those images to get the highest possib
 This, fundamentally, is the technology underlying the \textsl{Hubble Deep Field} (\citealt{hdf}),
 the \textsl{APOGEE} spectroscopic survey (\citealt{apogee}),
 and the future Rubin Observatory \textsl{LSST} (\citealt{lsst}), among countless other projects.
+This technology is encoded in tools such as \textsl{Drizzle} (\citealt{drizzle}) and HOGG.
 
-Is it astronomical blasphemy to say that this practice is \emph{wrong?}
-It is wrong because minimum-variance unbiased estimators require care in their construction; they are (often) maximum-likelihood estimators (\citealt{something}). % HOGG
-The deep, high signal-to-noise image or spectrum we seek is a statistical estimate of the image or spectrum, given the noisy data of the individual exposures.
-Noisy data are combined to make a measurement by building and optimizing a likelihood, not by shifting and stacking the input data.
+These traditional practices are reliable and fast.
+However, they will---in some cases---sacrifice some information.
+Minimum-variance unbiased estimators require care in their construction; they are generally maximum-likelihood estimators (\citealt{something}). % HOGG
+The deep, high signal-to-noise image or spectrum we seek is a statistical estimate of some kind of ``true'' or high signal-to-noise image or spectrum, given the noisy data of the individual exposures.
+That is, a combined image is a kind of \emph{prediction}: It is the prediction of what \emph{would have been observed} with a much longer exposure with a much better device.
+In measurement theory, the practice is to combine noisy data into a measurement by building and optimizing a likelihood, not by shifting and stacking (or performing other arithmetic operations on) the input data.
 Of course we don't always think of an image or a spectrum of the sky as the result of applying an \emph{estimator}, but it is.
 It is just a simultaneous estimate of a lot of different components (a lot of different pixels; all the pixels in the combined image or spectrum).
 
@@ -118,10 +124,10 @@ When we switch to a statistical-inference framework, we have to choose some form
 In what follows we use a maximally parameterized model, in the sense that we choose an expression for the functions or function space that has as many parameters as the output image has pixels.
 That means that the approach we take does not get its power from the choice of parameterized functions for the output:
 Indeed it has just as much freedom as the shifting-and-stacking standard practice.
-The forward-modeling we recommend gets its power from the fact that it generates the data directly and without manipulation.
+The forward-modeling we recommend gets its power from the fact that it generates the data directly and without manipulation, by means of a justified likelihood function.
 
-The data are never manipulated when using an estimator (in contrast to standard practice), but (for us) the functional requirements are the same as with standard practice:
-We consider here only procedures that start with the individual, single-epoch observations as inputs, along with noise estimates, bad-pixel masks, and perhaps bit-flags; and we consider only procedures that end with an output ``combined image'' or ``combined spectrum'' that is a set of intensity of flux values on a pixel grid, along with uncertainty estimates and metadata flags.
+A boundary condition of the work presented here is that the functional requirements of anything we provide must be the same as with standard practice:
+That is, we consider here only procedures that start with individual, single-epoch observations as inputs, along with noise estimates, bad-pixel masks, and perhaps bit-flags; and we consider only procedures that end with an output ``combined image'' or ``combined spectrum'' that is a set of intensity of flux values on a pixel grid, along with uncertainty estimates and metadata flags.
 That is, the only difference between standard practice and the forward model that we advocate is the purely in the nature of the estimator.
 Unlike the shift-and-coadd approach, the estimator we will deliver will be insensitive to under- or poorly-sampled data, which is not uncommon when astronomical seeing accidentally gets excellent, or in spectrographs that have limited detector pixels (for example, \citealt{apogeehardware}).
 As we will show, an estimator also often yields a more faithful estimate of the \emph{true} spectrum, and almost always better noise properties.
