@@ -3,3 +3,5 @@
 *.blg
 *.log
 main.pdf
+main.out
+notebooks
