@@ -85,7 +85,7 @@ Noise maps, data gaps, and bad-data masks don't require interpolation.
 The output can take the form of an image or spectrum evaluated on a pixel grid, as is traditional.
 In addition to shifts, the model can account for line-spread or point-spread function variations, world-coordinate-system variations, and calibration or normalization variations.
 The noise in the output becomes uncorrelated across neighboring pixels as the shifts deliver good coverage in some sense.
-The only cost is a small increase in computational complexity.
+The only cost is a small increase in computational complexity over that of traditional methods.
 We demonstrate the method with a small data example and we provide open-source sample code for re-use.
 \end{abstract}
 
@@ -137,10 +137,10 @@ But importantly, we aren't proposing a change to the \emph{format} of the input 
 % Hogg's email epiphany:
 % 1. I think I figured out what Blanton means by saying that interpolation of the data is a kind of fitting. It is! But those fits can’t be combined well because the fits are infinitely over-parameterized. If the interpolation was done approximately with a finite-parameter fit, we could interpolate and then average just fine. I’m writing this here to remind myself of this epiphany for when I come back online and write a subsection about this in the paper.
 
-% Hogg: what do you want to do about this?
+% Hogg: what do you want to do about this? HOGG SAY: I want to explicitly address it, maybe in a first section after the Introduction. This introduction is too long anyway!
 
 The approach we propose differs from interpolation in a subtle way. 
-Interpolation could be described as computing new values at arbitrary positions based on an exising set of known data points. 
+Interpolation could be described as computing new values at arbitrary positions based on an existing set of known data points. 
 Instead, here we propose to construct a continuous spectral model for the data, where we then evaluate that model on the given set of output positions (pixels).
 The \emph{output product} is the same form as what one would expect from an interpolation procedure (e.g., computed values along some array of positions), but the \emph{procedure} differs from interpolation. When interpolating data the basis functions are explicitly constructed from the data, whereas here we construct a forward model that is maximally consistent with the data, and evaluated at new positions.
 
@@ -160,7 +160,12 @@ That means that we are only considering here the very easiest case.
 However, we note that all standard shift-and-coadd methods make these non-variable assumptions implicitly.
 Part of our contribution in this \documentname{} is to make implicit assumptions explicit, in \sectionname~\ref{sec:assumptions}.
 
-HOGG: Most important: Say here why you should never want to do this at all! % ARC: I think you've covered this by talking about the two-dimensional data.
+Finally it is worthy of remark that, in some conceptual sense, there is no reason to \emph{ever} combine the individual spectroscopic exposures at all, for any reason, except possibly visualization and good vibes.
+No information is gained by performing a combination.
+Any line or feature that becomes visible under spectral combination must---at least in principle---be measurable in the uncombined individual spectra if those individual spectra are analyzed appropriately simultaneously.
+That was the insight and motivation for the unusual \textsl{COMBO-17} (\citealt{combo17}) approach in which the individual exposures were never co-added or combined; it is also the underlying idea behind work we have done on the proper motions and parallaxes of very faint sources (\citealt{undetectable}).
+Averaging the data doesn't ever create any new information.
+It can be satisfying though; it meets astronomical community expectations; and it might provide insights or inspire discoveries.
 
 \section{Concepts and assumptions}\label{sec:assumptions}
 
@@ -250,6 +255,7 @@ This will become obvious in the experiments below.
 \paragraph{Non-uniform fast Fourier transform}
 In the special case that the spectral model is a Fourier series, there are very useful and fast tools for interpolation, including especially the non-uniform fast Fourier transform (for example, \citealt{finufft}).
 
+%% HOGG SAY: This is not quite correct: We are not assuming no time var. We are assuming that the user wants the mean.
 \paragraph{Time variability}
 When we average data (or build a static model of multi-epoch data), we are implicitly assuming that there is no intrinsic variability to the source being observed.
 That is, we are assuming that the changes from observation to observation are solely from either the shifts $\Delta x_i$ or from the noise.
@@ -553,6 +559,7 @@ Barnett, A. H., Magland, J. F., \& af~Klinteberg, L., 2019, SIAM J. Sci. Comput.
 \bibitem[Hunter(2007)]{matplotlib} Hunter, J.~D.\ 2007, Computing in Science and Engineering, 9, 90. doi:10.1109/MCSE.2007.55
 \bibitem[Ivezi{\'c} et al.(2019)]{lsst} Ivezi{\'c}, {\v{Z}}., Kahn, S.~M., Tyson, J.~A., et al.\ 2019, \apj, 873, 111. doi:10.3847/1538-4357/ab042c
 \bibitem[Kelson(2003)]{kelson} Kelson, D.~D.\ 2003, \pasp, 115, 688. doi:10.1086/375502
+\bibitem[Lang et al.(2009)]{undetectable} Lang, D., Hogg, D.~W., Jester, S., et al.\ 2009, \aj, 137, 4400. doi:10.1088/0004-6256/137/5/4400
 \bibitem[Majewski et al.(2017)]{apogee} Majewski, S.~R., Schiavon, R.~P., Frinchaboy, P.~M., et al.\ 2017, \aj, 154, 94. doi:10.3847/1538-3881/aa784d
 \bibitem[Williams et al.(1996)]{hdf} Williams, R.~E., Blacker, B., Dickinson, M., et al.\ 1996, \aj, 112, 1335. doi:10.1086/118105
 \bibitem[Wilson et al.(2019)]{apogeehardware} Wilson, J.C., Hearty, F.R., Skrutskie, M.F., Majewski, S.R., Holtzman, J.A., Eisenstein, D., et al.\ 2019, \pasp, 131, 055001. doi:10.1088/1538-3873/ab0075.
