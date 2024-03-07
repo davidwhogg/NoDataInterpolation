@@ -173,9 +173,9 @@ What we do here can apply to almost any astronomical signals, but we are going t
 We are going to make many other assumptions too, all of which are discussed in this \sectionname.
 
 \paragraph{Multi-epoch spectra with shifts}
-We will assume that there are $n$ observations (epochs) of the same star (or maybe of different stars or quasars, say, that are assumed to be more-or-less identical, intrinsically, but let's think of a single star for now).
+We will assume that there are $N$ observations (epochs) of the same star (or maybe of different stars or quasars, say, that are assumed to be more-or-less identical, intrinsically, but let's think of a single star for now).
 Each of these observations $i$ (with $1\leq i\leq n$) produces a one-dimensional observed (noisy) image $y_i$.
-The $y_i$ can be thought of as $m_i$-vectors in what follows, where $m_i$ is the number of pixels in the $i$-th spectrum.
+The $y_i$ can be thought of as $M_i$-vectors in what follows, where $M_i$ is the number of pixels in the $i$-th spectrum.
 The different observations are made at different relative velocities (star minus spectrograph) such that the images are shifted by a different shift $\Delta x_i$ relative to the detector or extracted wavelength grid.
 
 \paragraph{Shift operators}
@@ -185,32 +185,30 @@ We will assume here that (from some external information) we know these shift op
 This is often not true, of course; we will return to this point in the discussion.
 
 \paragraph{Wavelength calibration}
-We will assume that, for every $m_i$-pixel image $y_i$ we also have a $m_i$-vector (or list) $x_i$ of pixel positions, such that each element of $x_i$ gives an accurate and precise value for the wavelength (or position in the spectrograph, in some settings) for each pixel of the image $y_i$.
+We will assume that, for every $M_i$-pixel image $y_i$ we also have a $M_i$-vector (or list) $x_i$ of pixel positions, such that each element of $x_i$ gives an accurate and precise value for the wavelength (or position in the spectrograph, in some settings) for each pixel of the image $y_i$.
 That is, the device is well calibrated, and we know all the housekeeping data we need for image $y_i$.
+
+If the data being combined were images rather than spectra, the relevant calibration would be astrometric calibration; to wit, that each pixel has a known position on the sky.
 
 \paragraph{Noise model}
 Each observation is noisy.
-We will assume that the noise has known properties, and especially that it is additive, (nearly) zero-mean and (nearly) Gaussian in form, with known variance.
-Under these assumptions, each spectrum $y_i$ has an associated variance tensor $C_i$.
-If $y_i$ is an $m_i$-vector, then $C_i$ is a nonnegative-definite $m_i\times m_i$ 2-tensor.
-We don't need to assume that the different pixels of the spectrum received independent noise, but we do assume that each epoch $i$ has an independent noise draw.
+We will assume that the noise has good properties, and especially that it is additive, (nearly) zero-mean and (nearly) Gaussian in form.
+We will \emph{not} assume that you know the variance of the noise accurately, but you can do better with this method if you do know the noise variances accurately for each pixel.
+In what follows, each spectrum $y_i$ is given an associated (but possibly inaccurate) noise-variance tensor $C_i$.
+If $y_i$ is an $M_i$-vector, then $C_i$ must be a nonnegative-definite $M_i\times m_i$ 2-tensor.
+In this description, there is no need to assume that the different pixels of the spectrum received independent noise, but we do assume that each epoch $i$ has an independent noise draw.
 
 \paragraph{Bad-pixel masks}
 Occasionally (or frequently) some of the pixels of a spectrum $y_i$ might be bad---affected by cosmic rays or electronics issues---such that there is a bad-pixel mask $b_i$ associated with each spectrum $y_i$.
 This mask has value 1 in the locations in all good pixels, and 0 in the locations of all bad pixels.
-
-\paragraph{Bit-flags}
-A bit-flag is often used to store meta data about a pixel that otherwise cannot be encoded by the spectrum $y_i$ or its asssociated variance tensor $C_i$ (e.g., poorly described line spread function). 
-We often want to propagate this meta data to appropriate pixels in the combined spectrum. 
-These bit-flag masks are usually encoded as integers with up to $F$ potential flags, allowing for all (or a subset of) flags to be encoded as a single value $\sum^{F}_{f=0} 2^f$. 
-This bit-flag mask can be separated into $F$ masks where each has value 1 in the locations where the flag is marked, and 0 in the locations where it is not.
+There are many different ways in which a pixel can be bad; in what follows the assumption is that the relevant judgements have been made more-or-less correctly.
 
 \paragraph{Data gaps}
-There is no assumption here that all the $y_i$ have the same number of pixels $m_i$, nor that the pixel grid is in any sense uniform or complete.
+There is no assumption here that all the $y_i$ have the same number of pixels $M_i$, nor that the pixel grid is in any sense uniform or complete.
 That is, there can be gaps and spaces in the wavelength coverage of the spectra, as there are at chip gaps and where the detector has bad columns.
 
 \paragraph{Pixel-convolved line-spread function}
-The spectrograph has something like a point-spread function or line-spread function, which, in the case of spectrosccopy, sets the shape of an unresolved spectral line.
+The spectrograph has something like a point-spread function or line-spread function, which, in the case of spectroscopy, sets the shape of an unresolved spectral line.
 In general it depends on the slit or fiber width, the spectrograph resolution and optics, instrument focus, and the properties of the detector.
 In what follows we will not build a model of any of this.
 Instead we will assume that there is a relatively constant pixel-convolved line-spread function (PCLSF), constant both in time, and constant with respect to the shifts $\Delta x_i$ we see in our data set.
@@ -220,10 +218,12 @@ All that said, we won't explicitly model or use the PCLSF in what follows; we wi
 
 In many cases the LSF or PSF is actually substantially different in different exposures.
 This leads to spectral (or image) variations, and violate the assumptions of this model (and also the implicit assumptions underlying standard practice).
-We won't address this kind of variability here, except in some discussion at the end.
+We won't address this kind of variability here, except in some discussion at the end:
+The method presented here can be straightforwardly modified to account for LSF or PSF variations.
 
 \paragraph{Continuous spectral model} 
-In what follows we are going to avoid interpolating the \emph{data} by having a spectral \emph{model} that can be arbitrarily and losslessly interpolated.
+In what follows we are going to avoid interpolating the data.
+We can avoid it by having a spectral \emph{model} instead that can be arbitrarily and losslessly interpolated.
 That means that the spectral model must be a representation of a continuous one-dimensional function.
 If we were working on two-dimensional images, the model would have to be a representation of a continous two-dimensional function.
 
@@ -233,42 +233,54 @@ These could be sines and cosines for a Fourier series model.
 They could be spline (or sinc or Lanczos) cardinal basis functions.
 They could be wavelets.
 The point is that if we use a linear basis, and assume that noises are Gaussian, we will get closed-form expressions for the data combination.
-Thus we will use a linear basis.
+Thus we will make use of a linear basis.
 
 \paragraph{Band limit}
-We say that a signal is \emph{band-limited} if it has no frequency content above some highest possible cutoff frequency.
+We are not assuming, in what follows, that the result we are looking for will be band-limited;
+we say that a signal is \emph{band-limited} if it has no frequency content above some highest possible cutoff frequency.
 There is a weird sense in which data from a spectrograph both is, and is not, band limited.
 It is band limited in that the spectrograph is finite in resolution, such that no real spectroscopic signal can show features narrower than the PCLSF.
 It is not band-limited in that the photon noise in the device is independent (or close to independent) from pixel to pixel, such that the noise contribution to each observation $y_i$ has support at all spatial frequencies.
 
 One interesting question in what follows is whether the forward model we build for the data should itself be restricted to the band limit defined by the spectrograph resolution, or whether it should permit higher frequencies.
 It might surprise the reader to learn that we prefer to let the model capture higher frequencies, even when we think they shouldn't be there for any reasons other than noise, given the hardware.
-More on this below.
+More on this below. %% HOGG DO WE COME BACK TO THIS?
 
+% HOGG SAY: IT is not at all clear here that we are NOT assuming critical sampling. We aren't! Make that clear.
+% In general this section has issues.
 \paragraph{Critical sampling}
-Because of considerations related to the Nyquist frequency on a uniform grid, it is valuable for a spectrograph to have a pixel spacing on the device that is smaller than the width of the PCLSF.
+We are not assuming, in what follows, that the data are critically sampled.
+Because of considerations related to the Nyquist frequency on a uniform grid, it is valuable for spectra to be represented with a pixel spacing that is smaller than the width of the PCLSF.
 Specifically, it is valuable for there to be two or three pixels across the full-width at half-maximum (FWHM) of the PCLSF.
 This keeps the band-limited part of the spectroscopic signal well-sampled in the data.
-There are spectrograph that don't have pixel scales this fine (for example, \textsl{APOGEE}; \citealt{apogee}); in these cases what we are proposing here is \emph{even more important} than it is in the well-sampled case.
-This will become obvious in the experiments below.
+In general, interpolation works much better on critically sampled data than it does on ill-sampled data.
+
+The fact that we are not interpolating the data means that we don't require critical sampling in the raw data.
+And indeed, there are spectrographs that don't have critically sampled pixel scales (for example, \textsl{APOGEE}; \citealt{apogee}).
+Thus we will not assume that the raw data are critically sampled, but we will produce the output mean spectrum on a grid that is critically sampled.
+The input and output pixel grids do not need to coincide when the model is a continuous function.
 
 \paragraph{Non-uniform fast Fourier transform}
 In the special case that the spectral model is a Fourier series, there are very useful and fast tools for interpolation, including especially the non-uniform fast Fourier transform (for example, \citealt{finufft}).
+These tools make the spectral combination substantially faster than naive linear algebra estimates would suggest.
 
-%% HOGG SAY: This is not quite correct: We are not assuming no time var. We are assuming that the user wants the mean.
 \paragraph{Time variability}
-When we average data (or build a static model of multi-epoch data), we are implicitly assuming that there is no intrinsic variability to the source being observed.
-That is, we are assuming that the changes from observation to observation are solely from either the shifts $\Delta x_i$ or from the noise.
-We interpolate the model to account for the shifts, and we combine data to beat down the noise.
-There are situations in which there is substantial time variability and these approaches are still valid, and there are modified approaches.
-We will discuss these changes and generalizations at the end.
+When we average data (or build a static model of multi-epoch data), we are implicitly assuming that we do not care about any of the intrinsic variability of the source being observed.
+That is, we are assuming that the changes from observation to observation are solely from either the shifts $\Delta x_i$ or else from effects that we consider to be noise.
+We interpolate the model to account for the shifts, and we combine data to average away this noise.
+In many cases the stellar variability is itself the subject of study, and then the variability is not entirely noise.
+But from the perspective of this project, any stellar variability is considered to be part of the total additive noise in the spectrum.
 
 \paragraph{Bias, sky, tellurics, flat-field, normalization}
 In what follows, we will assume that the input data are well calibrated in various ways.
 In particular, we will assume that the images or spectra have been bias-corrected, sky-subtracted, flat-fielded, and tellurics-corrected sufficiently well that the different observations $y_i$ can be seen as observations of the same underlying or intrinsic signal.
 Alternatively, the input data might be continuum-normalized or pseudo-continuum-normalized.
 Again, the assumption is that the different calibrated or processed observations are of the same underlying signal.
-If there are multiple signals participating, the model would have to expand into something like \textsl{wobble} (\citealt{wobble}).
+
+Many of these effects can be accounted for in straightforward generalizations of what we deliver below.
+For example, if there are multiple signals participating, the model would have to expand into something like \textsl{wobble} (\citealt{wobble}).
+For another, if there are normalization variations, a normalization model can be added to the image combination procedure.
+We return to these issues at the end. %% HOGG DO WE?
 
 \section{Method}\label{sec:method}
 
@@ -503,6 +515,8 @@ Here the pixel-to-pixel covariances resulting from Standard Practice(tm) are no 
 For example, if a weak Na line existed near this wavelength then a spectroscopist might readily interpret these covariances as real spectral features and report an enhanced Na abundance.
 Checking the strength of other (stronger) Na features would be a sensible check for this interpretation, but often there are few spectral lines available for a given element.
 
+HOGG Maybe consider the case of $P\sim\sum_i M_i$. Double descent and all? Or say this earlier in the method section?
+
 One side note about epoch-to-epoch variations in instrument or data-processing parameters:
 It is usually a good idea to model not the full instrument or data properties (as does \citealt{sp}) if that can be avoided, but rather just the \emph{differences} in instrument or data properties from one epoch to the next, taking those differences away from some fiducial data or instrument state.
 In the case of the LSF, for example, that obviates the need to model the infinite-resolution spectrum; the spectrum only needs to be modeled at fiducial resolution and convolved to other resolutions with difference kernels.
@@ -515,7 +529,6 @@ The next term would be the \emph{variance} of the process.
 That is, a more sophisticated model could have not just $P$ parameters for the mean spectrum, but additionally $P'$ parameters for a variance model.
 If the variance is low dimensional, or sparse, or compact in important ways, there should be very effective models of this form.
 For example, we could imagine forward-modeling generalizations of some of sparse methods (for example, \citealt{candes}) for applications in which the variability is localized in time or space; or we could imagine generalizations of matrix factorizations (for example, \citealt{hmf}) for applications in which variability is low dimensional (the \textsl{wobble} method has some such functionality; \citealt{wobble}). % HOGG: need candes and hmf citations
-
 
 All the above considerations of variability bring us to another of our strong assumptions:
 We have assumed that we know the shifts $\Delta x_i$ exactly.
