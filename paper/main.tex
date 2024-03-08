@@ -2,7 +2,7 @@
 
 % To-Do items
 % -----------
-% - Change the tone to "here's a method; it is principled and has great properties" and remove all suggestion that it is THE BEST THING. We don't need to win on BEST. We can win on sensible, well justified, good, implemented, demonstrated.
+% - What's our name? Choose and propagate into where "Forward Model(tm)" is used.
 % - Put in notes about our hypothesis for WHY we get uncorrelated pixels.
 % - Make comments directly about Drizzle to justify the name.
 % - discuss conservation of flux vs intensity.
@@ -106,7 +106,7 @@ This technology is encoded in tools such as \textsl{Drizzle} (\citealt{drizzle})
 
 These traditional practices are reliable and fast.
 However, they will---in some cases---sacrifice some information.
-Minimum-variance unbiased estimators require care in their construction; they are generally maximum-likelihood estimators (\citealt{something}). % HOGG
+Minimum-variance unbiased estimators require care in their construction; they are generally maximum-likelihood estimators (\citealt{mvue}). % HOGG
 The deep, high signal-to-noise image or spectrum we seek is a statistical estimate of some kind of ``true'' or high signal-to-noise image or spectrum, given the noisy data of the individual exposures.
 That is, a combined image is a kind of \emph{prediction}: It is the prediction of what \emph{would have been observed} with a much longer exposure with a much better device.
 In measurement theory, the practice is to combine noisy data into a measurement by building and optimizing a likelihood, not by shifting and stacking (or performing other arithmetic operations on) the input data.
@@ -175,7 +175,7 @@ We are going to make many other assumptions too, all of which are discussed in t
 \paragraph{Multi-epoch spectra with shifts}
 We will assume that there are $N$ observations (epochs) of the same star (or maybe of different stars or quasars, say, that are assumed to be more-or-less identical, intrinsically, but let's think of a single star for now).
 Each of these observations $i$ (with $1\leq i\leq n$) produces a one-dimensional observed (noisy) image $y_i$.
-The $y_i$ can be thought of as $M_i$-vectors in what follows, where $M_i$ is the number of pixels in the $i$-th spectrum.
+The $y_i$ can be thought of as $M_i$-vectors in what follows, where $M_i$ is the number of pixels in spectrum $i$.
 The different observations are made at different relative velocities (star minus spectrograph) such that the images are shifted by a different shift $\Delta x_i$ relative to the detector or extracted wavelength grid.
 
 \paragraph{Shift operators}
@@ -310,7 +310,6 @@ That is, you do not need to know the noise variances accurately (or even at all)
 
 If you additionally have a bad-pixel mask $b_i$ associated with each observation $y_i$, the bad-pixel mask can be used simply to zero out the corresponding bad rows and columns of the inverse covariance matrix $C_i^{-1}$.
 Importantly, the bad data get zeros in the \emph{inverse} covariance matrix, not the covariance matrix!
-We will propagate the meta data from the bit-flag mask later.
 
 Because we are often dealing with a spectrograph with a (fairly) well defined spectral resolution ($\delta\lambda/\lambda$ roughly constant), and because we care a lot about Doppler shifts (which are uniform in log wavelength), it makes sense to think of the pixel positions $x_i$ and shifts $\Delta x_i$ as being in log-wavelength (or ln-wavelength) units.
 Indeed, the \textsl{Sloan Digital Sky Survey} family of spectrographs extract one-dimensional spectra on a uniform-in-log-wavelength basis.
@@ -319,7 +318,7 @@ which include canonical functions from interpolation bases, wavelets, and Fourie
 In what follows, somewhat arbitrarily, we will use a Fourier basis, which can be expressed as follows:
 \begin{align}
     g_j(x) & = \left\{\begin{array}{cl}\displaystyle\cos\left(\frac{\pi\,[j-1]}{L}\,x\right) & \mbox{for $j$ odd} \\[3ex]
-                                       \displaystyle\sin\left(\frac{\pi\,j}{L}\,x\right) & \mbox{for $j$ even}\end{array}\right. ~,
+    \displaystyle\sin\left(\frac{\pi\,j}{L}\,x\right) & \mbox{for $j$ even}\end{array}\right. ~,\label{eq:basis}
 \end{align}
 where $L$ is a (long) length-scale in the $x$ space (the log-wavelength space), and $1\leq j\leq P$.
 
@@ -329,7 +328,7 @@ We make a $M\times M$ block-diagonal matrix $C^{-1}$ from all the individual inv
 We make a $M\times P$ design matrix $X$ which is the evaluation of all the $P$ basis functions at all the pixel locations in all of the $x_i$.
 Once we have these things, the best-fit parameters $\hat\theta$ are
 \begin{align}
-    \hat\theta &= (X^\top\,C^{-1}\,X)^{-1}\,X^\top\,C^{-1}\,Y ~,
+    \hat\theta &= (X^\top\,C^{-1}\,X)^{-1}\,X^\top\,C^{-1}\,Y ~, \label{eq:xtxinvxty}
 \end{align}
 which is the maximum-likelihood or minimum-$\chi^2$ solution for a linear weighted least squares problem or a linear model with Gaussian noise (see, for example, \citealt{fitting}).
 And now if we choose a final (uniform, say) output pixel grid $x_\star$ in the rest-frame (unshifted) wavelength space, the combined spectrum is just
@@ -360,12 +359,33 @@ For these reasons it often makes sense to set $M_\star\geq P$ such that the deli
 But that's a detailed question about your users and your goals.
 
 \paragraph{Implementation notes}
-Don't actually construct the very sparse $C_i$ matrices, just do pixel-wise multiplies.
-Don't use \texttt{inv()}, use \texttt{solve()} or \texttt{lstsq()}.
-Check your condition numbers.
-If $X$ is either very sparse (as it is in a b-spline basis) or Fourier (as it is in a sine-and-cosine basis) then there are very fast ways to do the linear algebra; research those.
-If you use the non-uniform fast Fourier transform, order your frequencies in the way the software wants, and deal with the complex numbers.
-Specify your choice of $L$ and $P$ and $M_\star$ in the Fourier case.
+Although the equations like \eqref{eq:xtxinvxty} show matrix multiplies between $C^{-1}$ and $X$, it is not a good idea to perform these multplies as true matrix multiplies if the $C^{-1}$ matrix is diagonal (as it often is).
+When $C^{-1}$ is diagonal, the matrix multiply can be done as a broadcast of the vector of diagonal values instead, which is faster (and way less memory intensive).
+
+Although the equations like \eqref{eq:xtxinvxty} show inverses, it is almost never a good idea to use the native linear-algebra inverse function \texttt{inv()} in any implementation of this method.
+The reason is that we don't want the inverse matrix itself, we want the outcome of the inverse matrix multiplied by $X^\top\,C^{-}\,Y$.
+For this use case, it is more precise and more more numerically stable to use the linear algebra \texttt{solve()} or \texttt{lstsq()} functions.
+
+Whenever performing\texttt{inv()}, \texttt{solve()}, or \texttt{lstsq()} operations, it is sensible to begin by checking the condition number (the ratio of the largest to the smallest singular value) of the matrix in play.
+Condition numbers larger than $10^8$ are usually trouble, even when the mathematics is being performed at double precision.
+When condition numbers get large, maybe a different basis or a re-scale of some basis functions might be a good idea.
+
+If $X$ is either very sparse (as it is in a b-spline basis) or Fourier (as it is in a sine-and-cosine basis) then there are very fast ways to do the linear algebra.
+We could have used the \texttt{finufft} package (\citealt{finufft}) to do the mathematics fast, because we have a Fourier basis here.
+Sparse linear algebra packages like that in \texttt{scipy} (\citealt{scipy}) are available; they would similarly speed up the code when using spline-like or wavelet-like bases.
+
+If you use any non-uniform fast Fourier transform package, the programming interface of that package will constrain how the frequencies must be ordered in the code, and it will probably require complex-number implementation.
+These have impacts on how the code is written.
+In particular the fact that the output spectrum $y_\ast$ is real-valued constrains the complex Fourier amplitudes.
+Continuing on the Fourier theme:
+Fourier series, technically, model \emph{periodic} functions.
+The length scale $L$ of that periodicity in \eqref{eq:basis} must be set to a length longer than the $x$-space span of any of the input or output pixel grids.
+
+We recommended setting $P=M_\ast$.
+We recommend very strongly \emph{against} setting $P\approx M$, where $M=\sum_i M_i$.
+That is, you want the number of parameters to equal your number of output pixels, but you \emph{don't} want your number of parameters to be close to the number of \emph{input} pixels.
+The reason for this is the ``double descent'' phenomenon, which de-stabilizes linear fitting (\citealt{doubledescent}).
+If you find yourself in the situation that $M_\ast\approx M$, reconsider your life choices.
 
 \section{Experiments and results}\label{sec:results}
 
@@ -401,8 +421,8 @@ The two complete data sets are shown in \figurename~\ref{fig:data1} and \figuren
     \end{mdframed}
 \end{figure}
 
-\paragraph{Forward Model (tm)}
-As our main experiment or result, we apply the Forward Model (tm) as described above in \sectionname~\ref{sec:method} to the input data shown in \figurename~\ref{fig:data1} and \figurename~\ref{fig:data2}.
+\paragraph{Forward Model(tm)}
+As our main experiment or result, we apply the Forward Model(tm) as described above in \sectionname~\ref{sec:method} to the input data shown in \figurename~\ref{fig:data1} and \figurename~\ref{fig:data2}.
 In each case, the output pixel grid $x_\star$ is chosen to be well sampled, with a pixel spacing of $1/R$ in the (natural) logarithm of wavelength.
 In order to give the model maximum flexibility, the number $P$ of Fourier modes in the spectral model is set to be equal to the number of pixels $M_\star$ in the pixel representation.
 The log-wavelength scale $L$ of the Fourier basis was set to the pixel spacing times the number of pixels.
@@ -413,15 +433,15 @@ We didn't employ any data weighting; we treated every epoch as identical in term
     \includegraphics[width=\figurewidth]{notebooks/forward1.pdf}\\
     \includegraphics[width=\figurewidth]{notebooks/forward2.pdf}
     \end{center}
-    \caption{The top two panels show the result of running the Forward Model (tm) on the poorly sampled input data, plus the residual away from the truth. The bottom two panels show the same but for the well sampled input data. In each panel, the red line shows the true model used to generate the data.\label{fig:forward}}
+    \caption{The top two panels show the result of running the Forward Model(tm) on the poorly sampled input data, plus the residual away from the truth. The bottom two panels show the same but for the well sampled input data. In each panel, the red line shows the true model used to generate the data.\label{fig:forward}}
     \end{mdframed}
 \end{figure}
-The combined spectrum resulting from the Forward Model (tm) described in \sectionname~\ref{sec:method} is shown in \figurename~\ref{fig:forward}.
+The combined spectrum resulting from the Forward Model(tm) described in \sectionname~\ref{sec:method} is shown in \figurename~\ref{fig:forward}.
 It is compared to the true spectral expectation model that was used to generate the data.
-Also shown in \figurename~\ref{fig:forward} is the residuals, Forward Model (tm) minus truth.
+Also shown in \figurename~\ref{fig:forward} is the residuals, Forward Model(tm) minus truth.
 The residuals look stationary, approximately Gaussian, and uncorrelated (more on this below).
 
-\paragraph{Standard Practice (tm)}
+\paragraph{Standard Practice(tm)}
 In standard practice, the individual spectra $y_i$ are interpolated to rest-frame spectra $y'_i$ using an interpolator.
 In detail, the data are shifted and also resampled onto the output pixel grid $x_\star$.
 The interpolator is a choice; cubic spline, Lanczos, and sinc interpolations are common, since they have good properties with respect to the spectrograph band limit.
@@ -430,7 +450,7 @@ Here we choose a cubic spline for convenience, but there are many other choices,
 The interpolated spectra $y'_i$ are, by construction, all on the same rest-frame wavelength grid $x_\star$ so they can be averaged, with a straight average, a median, an inverse-variance-weighted mean, or any more sophisticated algorithm.
 Here we choose an inverse-variance-weighted mean (HOGG: NO WE DON'T), but zeroing out the inverse variance at the locations of the bad pixels.
 
-This censorship of the bad pixels requires some attention:
+In Standard Practice(tm), this censorship of the bad pixels requires some attention:
 Naive interpolation of an integer (binary actually) bad-pixel mask $b_i$ will not deliver an integer mask $b'_i$.
 The conservative move (which we adopt) is to naively interpolate $b_i$ (also by the cubic spline) and then zero out any pixels that are significantly below unity.
 In general this substantially grows the binary mask, and reduces the amount of data available for combination.
@@ -440,7 +460,7 @@ The non-conservative approach is just as bad: if we restrict the number (or frac
     \begin{mdframed}\begin{center}
     \includegraphics[width=\figurewidth]{notebooks/datazoom_interpolated.pdf}
     \end{center}
-    \caption{As part of Standard Practice (tm), it is necessary to interpolate the individual epoch spectra before averaging them. This shows one epoch of the poorly sampled data, interpolated to the output $x_\star$ pixel grid in the rest frame. The interpolated spectrum is compared to the true spectral expectation employed to generate it. Note the ringing induced by the interpolation. Also shown is the censored data, near an interpolated bad pixel and at the edge of the domain. Compare to the bottom panels of \figurename~\ref{fig:data1}.\label{fig:interpolated}}
+    \caption{As part of Standard Practice(tm), it is necessary to interpolate the individual epoch spectra before averaging them. This shows one epoch of the poorly sampled data, interpolated to the output $x_\star$ pixel grid in the rest frame. The interpolated spectrum is compared to the true spectral expectation employed to generate it. Note the ringing induced by the interpolation. Also shown is the censored data, near an interpolated bad pixel and at the edge of the domain. Compare to the bottom panels of \figurename~\ref{fig:data1}.\label{fig:interpolated}}
     \end{mdframed}
 \end{figure}
 An example of a poorly-sampled spectrum interpolated to the rest frame is shown in \figurename~\ref{fig:interpolated}.
@@ -452,33 +472,40 @@ It also grows the bad-pixel mask around the bad pixel.
     \includegraphics[width=\figurewidth]{notebooks/standard1.pdf}\\
     \includegraphics[width=\figurewidth]{notebooks/standard2.pdf}
     \end{center}
-    \caption{Same as \figurename~\ref{fig:forward} but for the output of Standard Practice (tm). Note that in the poorly sampled case, the residuals appear to be spatially correlated, and the residuals appear to be larger near strong spectral features; more about these issues in the text and in \figurename~\ref{fig:noise}.\label{fig:standard}}
+    \caption{Same as \figurename~\ref{fig:forward} but for the output of Standard Practice(tm). Note that in the poorly sampled case, the residuals appear to be spatially correlated, and the residuals appear to be larger near strong spectral features; more about these issues in the text and in \figurename~\ref{fig:noise}.\label{fig:standard}}
     \end{mdframed}
 \end{figure}
-We show the final result of Standard Practice (tm)---interpolating the input data and then averaging the interpolations---for the two data sets, in \figurename~\ref{fig:standard}.
+We show the final result of Standard Practice(tm)---interpolating the input data and then averaging the interpolations---for the two data sets, in \figurename~\ref{fig:standard}.
 We also show the comparison with the true spectral expectation model that was employed to make the fake data.
 The residuals look correlated (there is ringing which mimics weak spectral features), and the residuals are larger near strong spectral features, especially in the case of the poorly sampled input data.
 
 \paragraph{Noise and noise covariances}
 
-We repeated the above experiments to empirically measure the noise covariances, and to estimate how correlated neighboring pixels are in the output spectrum. For the poorly sampled case and the well sampled case, we generated 64 multi-epoch data sets and computed the mean spectrum using the Forward Model (tm) and Standard Practice (tm). We then computed the empirical covariance in the output spectrum minus the true spectrum, which are shown in \figurename~\ref{fig:noise}.
-In each case, Standard Practice (tm) has a lower noise variance at zero lag, but shows spatially correlated noise over many pixels.
-The Forward Model (tm), in contrast, shows no pixel-to-pixel noise covariances, even when the input data are ill sampled.
+We repeated the above experiments to empirically measure the noise covariances, and to estimate how correlated neighboring pixels are in the output spectrum. For the poorly sampled case and the well sampled case, we generated 64 multi-epoch data sets and computed the mean spectrum using the Forward Model(tm) and Standard Practice(tm). We then computed the empirical covariance in the output spectrum minus the true spectrum, which are shown in \figurename~\ref{fig:noise}.
+In each case, Standard Practice(tm) has a lower noise variance at zero lag, but shows spatially correlated noise over many pixels.
+The Forward Model(tm), in contrast, shows no pixel-to-pixel noise covariances, even when the input data are ill sampled.
 \begin{figure}[t!]
     \begin{mdframed}\begin{center}
     \includegraphics[width=\figurewidth]{notebooks/noise.pdf}
     \end{center}
-    \caption{The empirical noise variance in the output (combined) spectra, and pixel-to-pixel covariances, as a function of pixel lag (pixel offset). The variances were estimated by performing the experiments repeated 64 times, with the same spectral expectations and sampling but unique noise draws. The Forward Model (tm) has slightly larger variance per pixel at zero lag, but vanishing pixel-to-pixel correlations. In contrast, the Standard Practice (tm) leads to correlated pixel values, with correlations extending out to many pixels.\label{fig:noise}}
+    \caption{The empirical noise variance in the output (combined) spectra, and pixel-to-pixel covariances, as a function of pixel lag (pixel offset). The variances were estimated by performing the experiments repeated 64 times, with the same spectral expectations and sampling but unique noise draws. The Forward Model(tm) has slightly larger variance per pixel at zero lag, but vanishing pixel-to-pixel correlations. In contrast, the Standard Practice(tm) leads to correlated pixel values, with correlations extending out to many pixels.\label{fig:noise}}
     \end{mdframed}
 \end{figure}
 
-HOGG: Note that if we choose $P<M$ we start to see noise correlations in the Forward Model (tm) too.
-That's one of a few reasons we like $P=M$.
+HOGG: Add intuition here about WHY the output noise model is close to uncorrelated?
+HOGG: Note that if we choose $P<M_\ast$ we start to see noise correlations in the Forward Model(tm) too.
+That's one of a few reasons we like $P=M_\ast$.
 
 \section{Discussion}\label{sec:discussion}
 
-Give some summary of the above.
-% ARC: Did you want to add summary of the above, or is this comment stale and the summary is now below?
+We have presented a forward-modeling approach to combining spectra or images.
+This method has good properties:
+It doesn't involve interpolating or otherwise distorting the input data;
+it produces a combined or mean spectrum in the format that traditional methods employ;
+it makes no assumptions about the form of the combined spectrum (except that it can be represented on an $M_\ast$-pixel grid);
+and it has excellent noise properties in real circumstances.
+The method can work on a wide variety of different kinds of data, but it is especially valuable in projects where the individual input exposures are ill-sampled, or not as well sampled as one might like.
+It is also good for situations in which the input data have heterogeneous bad pixels or data gaps.
 
 In the Introduction, we were agnostic about whether we were talking about imaging or spectroscopic data.
 In the end, our examples are spectroscopic.
@@ -489,46 +516,44 @@ Imaging epochs, on the other hand, can differ in terms of two shifts and a rotat
 And, since every pixel has its own two-dimensional position, the problem of locating pixels in an image is generally harder than the problem of locating pixels in an extracted spectrum.
 That is, the imaging case is generally more difficult.
 But it is not different, conceptually, from what is presented above.
+That is, once the (now more complicated) shift operators $\Delta x_i$ are known, the problem proceeds by the same mathematics.
 
 Everything presented above depends on a set of strong assumptions, listed in \sectionname~\ref{sec:assumptions}.
 Perhaps the strongest assumption is that the spectrum or image is not a function of time.
 That is, each epoch spectrum or image is a sampling of the same underlying, true signal.
 This assumption can be wrong for a myriad of reasons:
 The source can vary, the instrument can vary, there can be variable foregrounds or backgrounds, and there can be mistakes or variations in calibration or data processing.
-All of these things happen in real data sets, but the Forward Model (tm) is no more impacted by this than what is done in Standard Practice (tm)!
+All of these things happen in real data sets, but the Forward Model(tm) is no more impacted by this than what is done in Standard Practice(tm)!
 
 There are (at least) three attitudes for an investigator to take in the face of variations in the data, from epoch to epoch or exposure to exposure:
 The first is that the procedures we design are designed to deliver the exposure (or signal-to-noise-squared) weighted mean of the observed epochs.
-That is, the fact that the data are varying does not mean that the methodology needs to be modified; without modification, the procedures given above---both the Forward Model (tm) and the Standard Practice (tm)---will produce something like the mean spectrum.
+That is, the fact that the data are varying does not mean that the methodology needs to be modified; without modification, the procedures given above---both the Forward Model(tm) and the Standard Practice(tm)---will produce something like the mean spectrum.
+With this attitude, the spectral variations are just another source of noise.
 
 The second attitude to take---and the necessary attitude for many projects---is that the variations must be accounted for, by complexifying the forward model.
 For example, if there is a varying line-spread function between epochs (as there is for the \textsl{APOGEE} spectrograph, because the LSF is a function of the slit position of the optical fiber), then in addition to a shift at each epoch there is also an LSF adjustment at each epoch.
 The LSF adjustment is then applied to the spectral model before it is compared to each epoch of data, just as the shift is applied in the current methodological scope.
-Similar model adustments can account for intrinsic spectral variations, additive or multiplicative nuisance signals in the data (like backgrounds or telluric absorptions), and mistakes in data pre-processing (like continuum modeling errors).
+Similar model adjustments can account for intrinsic spectral variations, additive or multiplicative nuisance signals in the data (like backgrounds or telluric absorptions), and mistakes in data pre-processing (like continuum modeling errors).
 
-HOGG: What is the third attitude?
-
-The combined spectrum computed with the Forward Model(tm) has minimal pixel-to-pixel covariances based on repeated experiments.
-In contrast, the combined spectrum computed with Standard Practice(tm) has substantial pixel-to-pixel covariances.
-This is particularly evident in the second panel of Figure~\ref{fig:noise} near $\ln\lambda = 8.7024$.
-Here the pixel-to-pixel covariances resulting from Standard Practice(tm) are no longer academic, as the covariances here mimic weak spectral features.
-For example, if a weak Na line existed near this wavelength then a spectroscopist might readily interpret these covariances as real spectral features and report an enhanced Na abundance.
-Checking the strength of other (stronger) Na features would be a sensible check for this interpretation, but often there are few spectral lines available for a given element.
-
-HOGG Maybe consider the case of $P\sim\sum_i M_i$. Double descent and all? Or say this earlier in the method section?
-
-One side note about epoch-to-epoch variations in instrument or data-processing parameters:
-It is usually a good idea to model not the full instrument or data properties (as does \citealt{sp}) if that can be avoided, but rather just the \emph{differences} in instrument or data properties from one epoch to the next, taking those differences away from some fiducial data or instrument state.
-In the case of the LSF, for example, that obviates the need to model the infinite-resolution spectrum; the spectrum only needs to be modeled at fiducial resolution and convolved to other resolutions with difference kernels.
-
-Although \emph{conceptually} changes to account for data variability aren't that big, \emph{in practice} they can be very hard to implement.
+Although \emph{conceptually} it is not hard to account for such variabilities, \emph{in practice} they can make life hard.
 For one, the method we have presented assumes that we \emph{know} the individual epoch shifts \textsl{a priori}, and all new epoch-to-epoch adjustments would also depend on per-epoch housekeeping data or parameters that might, in practice, be hard to know.
 That brings us to the third attitude that the investigator can take.
 What's presented above can be seen as a model for the \emph{mean} of the process that generates individual-epoch spectra; that is the first term in an expansion of moments.
 The next term would be the \emph{variance} of the process.
 That is, a more sophisticated model could have not just $P$ parameters for the mean spectrum, but additionally $P'$ parameters for a variance model.
 If the variance is low dimensional, or sparse, or compact in important ways, there should be very effective models of this form.
-For example, we could imagine forward-modeling generalizations of some of sparse methods (for example, \citealt{candes}) for applications in which the variability is localized in time or space; or we could imagine generalizations of matrix factorizations (for example, \citealt{hmf}) for applications in which variability is low dimensional (the \textsl{wobble} method has some such functionality; \citealt{wobble}). % HOGG: need candes and hmf citations
+For example, we could imagine forward-modeling generalizations of some of sparse methods (for example, \citealt{candes}) for applications in which the variability is localized in time or space; or we could imagine generalizations of matrix factorizations (for example, \citealt{hmf}) for applications in which variability is low dimensional (the \textsl{wobble} method has some such functionality; \citealt{wobble}).
+
+The combined spectrum computed with the Forward Model(tm) has minimal pixel-to-pixel covariances based on repeated experiments.
+In contrast, the combined spectrum computed with Standard Practice(tm) has substantial pixel-to-pixel covariances.
+This is particularly evident in the second panel of Figure~\ref{fig:noise} near $\ln\lambda = 8.7024$.
+Here the pixel-to-pixel covariances resulting from Standard Practice(tm) are not purely of academic interest, as the covariances here mimic weak spectral features.
+For example, if a weak Na line existed near this wavelength then a spectroscopist might readily interpret these covariances as real spectral features and report an enhanced Na abundance.
+Checking the strength of other (stronger) Na features would be a sensible check for this interpretation, but often there are few spectral lines available for a given element.
+
+One side note about epoch-to-epoch variations in instrument or data-processing parameters:
+It is usually a good idea to model not the full instrument or data properties (as does \citealt{sp}) if that can be avoided, but rather just the \emph{differences} in instrument or data properties from one epoch to the next, taking those differences away from some fiducial data or instrument state.
+In the case of the LSF, for example, that obviates the need to model the infinite-resolution spectrum; the spectrum only needs to be modeled at fiducial resolution and convolved to other resolutions with difference kernels.
 
 All the above considerations of variability bring us to another of our strong assumptions:
 We have assumed that we know the shifts $\Delta x_i$ exactly.
@@ -537,16 +562,15 @@ When the shifts $\Delta x_i$ are not known, or not known accurately enough, we r
 This can be achieved through a challenging nonlinear optimization, or through an iteration of linearized optimizations, alternating improvements to the combined spectrum and improvements to the shifts.
 This is, more or less, how the \textsl{wobble} system works (\citealt{wobble}).
 
-% What about non-Gaussian noise?
+We effectively assumed that the noise was Gaussian, and zero mean, but these are not always true of astronomical data.
+In principle even in the best-case scenarios there are Poisson noise sources, and cosmic rays and faulty detector pixels tend to add in highly skewed, non-zero-mean noise.
+The most important noise assumption made in all this is the zero-mean assumption; when this is wrong, all current spectral (or image) combination methods will be biased (including Standard Practice), unless they employ a likelihood function that accurately represents the detailed noise statistics.
 
-We assumed that the noise was Gaussian, but this is not always true of astronomical data.
-In the case of Poisson noise that is not background dominated, the variance tensor $C_i$ will be biased, and all our assumptions about additive Gaussian variance will be broken. % ARC: what else should we say about this?
-
-
-Code is available at \url{https://github.com/davidwhogg/NoDataInterpolation} and is registered in the Python Package Index as \texttt{NoDataInterpolation}.
+All code used for this project is available at \url{https://github.com/davidwhogg/NoDataInterpolation} and is registered in the Python Package Index as \texttt{NoDataInterpolation}.
 
 \paragraph{Software}
 \texttt{numpy} \citep{numpy} ---
+\texttt{scipy} \citep{scipy} ---
 \texttt{matplotlib} \citep{matplotlib}.
 
 \paragraph{Acknowledgements}
@@ -565,7 +589,10 @@ for valuable discussions and input.
 Barnett, A. H., Magland, J. F., \& af~Klinteberg, L., 2019, SIAM J. Sci. Comput. 41(5), C479
 \bibitem[Bedell et al.(2019)]{wobble} Bedell, M., Hogg, D.~W., Foreman-Mackey, D., et al.\ 2019, \aj, 158, 164. doi:10.3847/1538-3881/ab40a7
 \bibitem[Bolton \& Schlegel(2010)]{sp} Bolton, A.~S. \& Schlegel, D.~J.\ 2010, \pasp, 122, 248. doi:10.1086/651008
+\bibitem[Candes \& Romberg(2007)]{candes} Candes, E., \& Romberg, J., 2007, Inverse problems, 23, 969.
+\bibitem[Fruchter \& Hook(2002)]{drizzle} Fruchter, A.~S. \& Hook, R.~N.\ 2002, \pasp, 114, 144. doi:10.1086/338393
 \bibitem[Harris et al.(2020)]{numpy} Harris, C.~R., Millman, K.~J., van der Walt, S.~J., et al.\ 2020, \nat, 585, 357. doi:10.1038/s41586-020-2649-2
+\bibitem[Hastie et al.(2022)]{doubledescent} Hastie, T., Montanari, A., Rosset, S., \& Tibshirani, R. J., 2022, Annals of Statistics, 50, 949. doi:10.1214/21-AOS2133
 \bibitem[Hewett et al.(1985)]{oe} Hewett, P.~C., Irwin, M.~J., Bunclark, P., et al.\ 1985, \mnras, 213, 971. doi:10.1093/mnras/213.4.
 \bibitem[Hogg et al.(2010)]{fitting} Hogg, D.~W., Bovy, J., \& Lang, D.\ 2010, arXiv:1008.4686
 \bibitem[Hogg \& Villar(2021)]{fittingflexible} Hogg, D.~W. \& Villar, S.\ 2021, \pasp, 133, 093001. doi:10.1088/1538-3873/ac20ac
@@ -574,6 +601,9 @@ Barnett, A. H., Magland, J. F., \& af~Klinteberg, L., 2019, SIAM J. Sci. Comput.
 \bibitem[Kelson(2003)]{kelson} Kelson, D.~D.\ 2003, \pasp, 115, 688. doi:10.1086/375502
 \bibitem[Lang et al.(2009)]{undetectable} Lang, D., Hogg, D.~W., Jester, S., et al.\ 2009, \aj, 137, 4400. doi:10.1088/0004-6256/137/5/4400
 \bibitem[Majewski et al.(2017)]{apogee} Majewski, S.~R., Schiavon, R.~P., Frinchaboy, P.~M., et al.\ 2017, \aj, 154, 94. doi:10.3847/1538-3881/aa784d
+\bibitem[Tsalmantza \& Hogg(2012)]{hmf} Tsalmantza, P. \& Hogg, D.~W.\ 2012, \apj, 753, 122. doi:10.1088/0004-637X/753/2/122
+\bibitem[Virtanen et al.(2020)]{scipy} Virtanen, P., Gommers, R., Oliphant, T.~E., et al.\ 2020, Nature Methods, 17, 261. doi:10.1038/s41592-019-0686-2
+\bibitem[Voinov \& Nikulin(2012)]{mvue} Voinov, V. G., \& Nikulin, M. S., 2012, Unbiased Estimators and Their Applications: Volume 1: Univariate Case, Springer Science \& Business Media.
 \bibitem[Williams et al.(1996)]{hdf} Williams, R.~E., Blacker, B., Dickinson, M., et al.\ 1996, \aj, 112, 1335. doi:10.1086/118105
 \bibitem[Wilson et al.(2019)]{apogeehardware} Wilson, J.C., Hearty, F.R., Skrutskie, M.F., Majewski, S.R., Holtzman, J.A., Eisenstein, D., et al.\ 2019, \pasp, 131, 055001. doi:10.1088/1538-3873/ab0075.
 \bibitem[Wolf et al.(2003)]{combo17} Wolf, C., Meisenheimer, K., Rix, H.-W., et al.\ 2003, \aap, 401, 73. doi:10.1051/0004-6361:20021513
