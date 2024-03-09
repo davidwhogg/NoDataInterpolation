@@ -6,9 +6,6 @@
 % - Put in notes about our hypothesis for WHY we get uncorrelated pixels.
 % - Make comments directly about Drizzle to justify the name.
 % - discuss conservation of flux vs intensity.
-% - Blanton asks: Is this identical to sinc shift and average? Hogg thinks it MIGHT be.
-% - Add Hogg response to Blanton: Interpolate with (say) cubic spline and then average is NOT THE SAME as fit all the data simultaneously with a cubic spline function on a particular set of knots.
-% - Dustin asks: Is this effectively producing a sinc LSF? Hogg thinks it DEFINITELY IS NOT. Explain why not in the text.
 % - Hogg notes: Is it clear in the text that we are taking everything to a standard instrument? And the user can decide what that instrument is? That isn't in our current implementation, but it COULD BE. Discussion point?
 % - Related Hogg issue: Any latent spectrum (like our combined spectrum) should be something that COULD BE OBSERVED by some instrument in the future. Hence spectro-perfectionism is wrong (ish).
 % - Read and cite the DESI spectral pipeline paper; Dustin says it's relevant.
@@ -16,7 +13,6 @@
 % - Audit and fix the sign applied to $\Delta x_i$ everywhere. Wrong relative to code?
 % - Write about the two input-data cases.
 % - See bug list in code for other issues with the text--code relationship (noise model; line-formation model).
-% - Audit for its / it's. Hogg has issues with this.
 % - Deal with all HOGG, ANDY, ARC, XXX, YYY, CITE, etc.
 
 \documentclass[modern]{aastex631}
@@ -102,7 +98,7 @@ We then shift and average (maybe median?) those images to get the highest possib
 This, fundamentally, is the technology underlying the \textsl{Hubble Deep Field} (\citealt{hdf}),
 the \textsl{APOGEE} spectroscopic survey (\citealt{apogee}),
 and the future Rubin Observatory \textsl{LSST} (\citealt{lsst}), among countless other projects.
-This technology is encoded in tools such as \textsl{Drizzle} (\citealt{drizzle}) and HOGG.
+This technology is encoded in tools such as \textsl{Drizzle} (\citealt{drizzle}).
 
 These traditional practices are reliable and fast.
 However, they will---in some cases---sacrifice some information.
@@ -281,6 +277,9 @@ Many of these effects can be accounted for in straightforward generalizations of
 For example, if there are multiple signals participating, the model would have to expand into something like \textsl{wobble} (\citealt{wobble}).
 For another, if there are normalization variations, a normalization model can be added to the image combination procedure.
 We return to these issues at the end. %% HOGG DO WE?
+
+\paragraph{Flux or photon conservation}
+HOGG SHOULD WE PUT WORDS HERE ABOUT WHY WE DON'T CARE ABOUT THIS CONSIDERATION? (1) normalized spectra. (2) It is intensity that a telescope imager measures.
 
 \section{Method}\label{sec:method}
 
@@ -501,11 +500,20 @@ That's one of a few reasons we like $P=M_\ast$.
 We have presented a forward-modeling approach to combining spectra or images.
 This method has good properties:
 It doesn't involve interpolating or otherwise distorting the input data;
-it produces a combined or mean spectrum in the format that traditional methods employ;
+it produces a combined or mean spectrum in the format that astronomers traditionally expect;
 it makes no assumptions about the form of the combined spectrum (except that it can be represented on an $M_\ast$-pixel grid);
 and it has excellent noise properties in real circumstances.
-The method can work on a wide variety of different kinds of data, but it is especially valuable in projects where the individual input exposures are ill-sampled, or not as well sampled as one might like.
+The method can work on a wide variety of different kinds of data, but it is especially valuable in projects where the individual input exposures are ill-sampled, or not as well sampled as one might like; our original motivation was the individual \textsl{APOGEE} spectrograph (\citealt{apogeehardware}) exposures.
 It is also good for situations in which the input data have heterogeneous bad pixels or data gaps.
+
+The method does not involve interpolating the data.
+However, it does fit a very flexible model to the data, and there is a limit in which fitting very flexible models is equivalent to interpolation (see, eg, \citealt{fittingflexible}).
+So is this method, implicitly, interpolating the data?
+Our answer is no.
+Interpolation of the data involves non-parametric models with control points that are set by the pixel grids of the input data.
+Our model choice never refers to the properties of the input data pixel grids; it is chosen based on the desired properties of the output, combined-spectrum grid.
+Furthermore, interpolation functions (like cubic spline, say, or Lanczos-5, say) pass through every raw-data pixel value exactly.
+There is no point in this method at which the function being fit passes through every (or even any) of the raw-data pixel values.
 
 In the Introduction, we were agnostic about whether we were talking about imaging or spectroscopic data.
 In the end, our examples are spectroscopic.
