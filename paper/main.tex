@@ -24,6 +24,7 @@
 \addtolength{\textheight}{0.6in}
 \setlength{\parindent}{3.5ex}
 \renewcommand{\paragraph}[1]{\medskip\par\noindent\textbf{#1}~---}
+\sloppy\sloppypar\raggedbottom\frenchspacing
 
 % figure setup
 \usepackage{graphicx}
@@ -53,9 +54,6 @@
 \newcommand{\mps}{\unit{m\,s^{-1}}}
 \newcommand{\kmps}{\unit{km\,s^{-1}}}
 
-% notes
-
-\sloppy\sloppypar\raggedbottom\frenchspacing
 \begin{document}
 
 \title{\large Fowizzle: Combining spectra or images by forward modeling}
@@ -63,7 +61,7 @@
 \author[0000-0003-2866-9403]{David W. Hogg}
 \affiliation{Center for Cosmology and Particle Physics, Department of Physics, New York University}
 \affiliation{Max-Planck-Institut f\"ur Astronomie, Heidelberg}
-\affiliation{Flatiron Institute, a division of the Simons Foundation}
+\affiliation{Center for Computational Astrophysics, Flatiron Institute}
 
 \author[0000-0003-0174-0564]{Andrew R. Casey}
 \affiliation{School of Physics \& Astronomy, Monash University}
@@ -84,9 +82,8 @@ The only cost is a small increase in computational complexity over that of tradi
 We demonstrate the method with a small data example and we provide open-source sample code for re-use.
 \end{abstract}
 
-\keywords{Foo --- Bar --- HOGG}
+\keywords{HOGG --- Foo --- Bar}
 
-\section*{}\clearpage
 \section{Introduction}\label{sec:intro}
 
 It would be wrong to say that the practice of astronomy is, basically, \emph{staring at the sky}.
@@ -97,21 +94,21 @@ We then shift and average (maybe median?) those images to get the highest possib
 This, fundamentally, is the technology underlying the \textsl{Hubble Deep Field} (\citealt{hdf}),
 the \textsl{APOGEE} spectroscopic survey (\citealt{apogee}),
 and the future Rubin Observatory \textsl{LSST} (\citealt{lsst}), among countless other projects.
-This technology is encoded in tools such as \textsl{Drizzle} (\citealt{drizzle}).
+This technology is encoded in tools like \texttt{Drizzle} (\citealt{drizzle}).
 
 These traditional practices are reliable and fast.
 However, they will---in some cases---sacrifice some information.
 Minimum-variance unbiased estimators require care in their construction; they are generally maximum-likelihood estimators (\citealt{mvue}). % HOGG
 The deep, high signal-to-noise image or spectrum we seek is a statistical estimate of some kind of ``true'' or high signal-to-noise image or spectrum, given the noisy data of the individual exposures.
 That is, a combined image is a kind of \emph{prediction}: It is the prediction of what \emph{would have been observed} with a much longer exposure with a much better device.
-In measurement theory, the practice is to combine noisy data into a measurement by building and optimizing a likelihood, not by shifting and stacking (or performing other arithmetic operations on) the input data.
+In measurement theory, the practice is to combine noisy data into a measurement by building and optimizing a likelihood.
 Of course we don't always think of an image or a spectrum of the sky as the result of applying an \emph{estimator}, but it is.
-It is just a simultaneous estimate of a lot of different components (a lot of different pixels; all the pixels in the combined image or spectrum).
+It is just a simultaneous estimate of a lot of different components---a lot of different pixels---all the pixels in the combined image or spectrum.
 
 We are in a period in astrophysics in which exceedingly precise measurements are expected, in both imaging and spectroscopy projects.
 In spectroscopy, in particular, high signal-to-noise spectral measurements are expected to obtain surface-abundance measurements with precisions a few percent, and radial-velocity measurements with precisions of up to one ten-thousandth of a \emph{pixel} (in terms of the Doppler shift).
 Spectral combination methods that distort absorption (or emission) lines will translate into biases, errors, or increased variance in these measurements.
-Spectral combination methods that correlate the noise in the outputs will translate into increased variance, and necessitate more sophisticated downstream measurement techniques (which don't really exist at present).
+Spectral combination methods that correlate the noise in the outputs will translate into increased variance, and necessitate more sophisticated downstream measurement techniques.
 
 One of the great things about the standard practice---the simple process of shifting and stacking the data---is that this procedure makes almost no assumptions about what the output, combined image or spectrum will look like.
 It isn't really a ``model'' for the data; it is more like a ``summary'' of the data.
@@ -119,25 +116,19 @@ When we switch to a statistical-inference framework, we have to choose some form
 In what follows we use a maximally parameterized model, in the sense that we choose an expression for the functions or function space that has as many parameters as the output image has pixels.
 That means that the approach we take does not get its power from the choice of parameterized functions for the output:
 Indeed it has just as much freedom as the shifting-and-stacking standard practice.
-The forward-modeling we recommend gets its power from the fact that it generates the data directly and without manipulation, by means of a justified likelihood function.
+The forward-modeling we recommend gets its power from the fact that it generates the data directly and without manipulation, by means of a justifiable likelihood function.
 
 A boundary condition of the work presented here is that the functional requirements of anything we provide must be the same as with standard practice:
-That is, we consider here only procedures that start with individual, single-epoch observations as inputs, along with noise estimates, bad-pixel masks, and perhaps bit-flags; and we consider only procedures that end with an output ``combined image'' or ``combined spectrum'' that is a set of intensity of flux values on a pixel grid, along with uncertainty estimates and metadata flags.
+That is, we consider here only procedures that start with individual, single-epoch observations as inputs, along with noise estimates and bad-pixel masks; and we consider only procedures that end with an output ``combined image'' or ``combined spectrum'' that is a set of intensity of flux values on a pixel grid, along with uncertainty estimates and metadata flags.
 That is, the only difference between standard practice and the forward model that we advocate is the purely in the nature of the estimator.
 Unlike the shift-and-coadd approach, the estimator we will deliver will be insensitive to under- or poorly-sampled data, which is not uncommon when astronomical seeing accidentally gets excellent, or in spectrographs that have limited detector pixels (for example, \citealt{apogeehardware}).
-As we will show, an estimator also often yields a more faithful estimate of the \emph{true} spectrum, and almost always better noise properties.
-Both of these results make our results better for any subsequent precision measurements (e.g., radial velocities, chemical abundances).
-But importantly, we aren't proposing a change to the \emph{format} of the input or outputs of spectral or image combination.
+As we will show with artificial data, the estimator we propose yields a faithful estimate of the \emph{true} spectrum, and usually with good noise properties.
+Both of these results make our results good for subsequent precision measurements (e.g., radial velocities, chemical abundances).
 
-% Hogg's email epiphany:
-% 1. I think I figured out what Blanton means by saying that interpolation of the data is a kind of fitting. It is! But those fits can’t be combined well because the fits are infinitely over-parameterized. If the interpolation was done approximately with a finite-parameter fit, we could interpolate and then average just fine. I’m writing this here to remind myself of this epiphany for when I come back online and write a subsection about this in the paper.
-
-% Hogg: what do you want to do about this? HOGG SAY: I want to explicitly address it, maybe in a first section after the Introduction. This introduction is too long anyway!
-
-The approach we propose differs from interpolation in a subtle way. 
+The approach we propose differs from interpolation-and-averaging in a subtle way. 
 Interpolation could be described as computing new values at arbitrary positions based on an existing set of known data points. 
-Instead, here we propose to construct a continuous spectral model for the data, where we then evaluate that model on the given set of output positions (pixels).
-The \emph{output product} is the same form as what one would expect from an interpolation procedure (e.g., computed values along some array of positions), but the \emph{procedure} differs from interpolation. When interpolating data the basis functions are explicitly constructed from the data, whereas here we construct a forward model that is maximally consistent with the data, and evaluated at new positions.
+Instead, here we propose to construct a continuous spectral model for the data, such that we can evaluate that model on either the input (raw-data) pixel grid or else on the output (combined spectrum) pixel grid.
+The \emph{output product} is the same form as what one would expect from an interpolation-and-averaging procedure (values at a set of pixel positions), but the \emph{procedure} differs from interpolation. When interpolating the input data the basis functions are explicitly constructed from the input-data pixel grid, whereas here we construct a forward model that is maximally consistent with the data, and can be evaluated at any pixel locations.
 
 The ideas here aren't novel; many projects have avoided data interpolation previously.
 For one example, the \textsl{COMBO-17} survey (\citealt{combo17}) took many images of the sky in many bands, and did not co-add the data prior to making measurements, in part to avoid mixing different point-spread functions and pixel samplings.
@@ -147,14 +138,14 @@ What we propose below is actually a sub-problem of the problem solved by the \te
 Plus it learns (it isn't told) the epoch-to-epoch spectral shifts.
 There is a heritage for what's presented here in the ``optimal extraction'' literature (for example, \citealt{oe}, \citealt{kelson}, \citealt{froe}, \citealt{sp}):
 Optimal extraction describes a process of extracting a one-dimensional spectral signal from a two-dimensional spectrograph image when that extraction proceeds by forward modeling the two-dimensional data.
-One amusing point, which is out of scope here, is that if the data that are being combined are extracted one-dimensional spectra, and those are, in turn, optimal extractions, then there is a better method that moves this spectral combination method directly into the two-dimensional data.
+One amusing point, which is out of scope here, is that if the data that are being combined are extracted one-dimensional spectra, and those are, in turn, optimal extractions, then there is almost certainly a better method that moves this spectral combination method directly into the two-dimensional data; that is, there ought to be a method that obviates one-dimensional spectral extraction entirely.
 We hope for a future in which one-dimensional spectra are never extracted from two-dimensional images; in this future the two-dimensional data are the sacred data, not the extractions.
 
 In real applications, the spectra we extract are often of variable sources, or taken at different position angles on extended objects, such that we don't expect each epoch to be identical.
-Similarly, the \textsl{LSST} data are being taken the way they because the sky (and point-spread function) will vary.
-That means that we are only considering here the very easiest case.
-However, we note that all standard shift-and-coadd methods make these non-variable assumptions implicitly.
-Part of our contribution in this \documentname{} is to make implicit assumptions explicit, in \sectionname~\ref{sec:assumptions}.
+Similarly, the \textsl{LSST} data are being taken the way they are because the sky (and point-spread function) will vary.
+Hence, in assuming that we only want the time-invariant mean of our data, we are considering here the very easiest problem in a range of possible problems.
+However, we note that all standard shift-and-coadd methods make similar assumptions implicitly.
+Part of our contribution in this \documentname{} is to make implicit assumptions explicit; we do this in \sectionname~\ref{sec:assumptions}.
 
 Finally it is worthy of remark that, in some conceptual sense, there is no reason to \emph{ever} combine the individual spectroscopic exposures at all, for any reason, except possibly visualization and good vibes.
 No information is gained by performing a combination.
@@ -591,6 +582,11 @@ Dustin Lang (Perimeter),
 Adrian Price-Whelan (Flatiron),
 and the Astronomical Data Group at the Flatiron Institute,
 for valuable discussions and input.
+The Flatiron Institute is a division of the Simons Foundation.
+
+HOGG: DID WE USE SDSS DATA?
+
+ARC: DO YOU HAVE GRANTS TO THANK?
 
 \begin{thebibliography}{dummy}
 \bibitem[Barnett et al.(2019)]{finufft}
