@@ -8,7 +8,6 @@
 % - discuss conservation of flux vs intensity.
 % - Hogg notes: Is it clear in the text that we are taking everything to a standard instrument? And the user can decide what that instrument is? That isn't in our current implementation, but it COULD BE. Discussion point?
 % - Related Hogg issue: Any latent spectrum (like our combined spectrum) should be something that COULD BE OBSERVED by some instrument in the future. Hence spectro-perfectionism is wrong (ish).
-% - Read and cite the DESI spectral pipeline paper; Dustin says it's relevant.
 % - Audit for rigid terminology. HOGG is currently liking ``combined spectrum'' for the model expectation, for example. And "standard practice" for the traditions of our field.
 % - Audit and fix the sign applied to $\Delta x_i$ everywhere. Wrong relative to code?
 % - Write about the two input-data cases.
@@ -143,6 +142,7 @@ The \emph{output product} is the same form as what one would expect from an inte
 The ideas here aren't novel; many projects have avoided data interpolation previously.
 For one example, the \textsl{COMBO-17} survey (\citealt{combo17}) took many images of the sky in many bands, and did not co-add the data prior to making measurements, in part to avoid mixing different point-spread functions and pixel samplings.
 For another, some projects have sought to co-add background-dominated images in a near optimal way, but presume that all observations are already registered and re-sampled to the same grid \citep{zackay}.
+For another, the \textsl{DESI} survey ensures that all spectra are extracted on the same wavelength grid, to avoid any interpolation or resampling \citep{desipipeline}.
 What we propose below is actually a sub-problem of the problem solved by the \textsl{wobble} method for determining stellar radial velocities (\citealt{wobble}); \textsl{wobble} is more general because it also includes a tellurics model and also tellurics and stellar variability models.
 Plus it learns (it isn't told) the epoch-to-epoch spectral shifts.
 There is a heritage for what's presented here in the ``optimal extraction'' literature (for example, \citealt{oe}, \citealt{kelson}, \citealt{froe}, \citealt{sp}):
@@ -599,6 +599,7 @@ Barnett, A. H., Magland, J. F., \& af~Klinteberg, L., 2019, SIAM J. Sci. Comput.
 \bibitem[Bolton \& Schlegel(2010)]{sp} Bolton, A.~S. \& Schlegel, D.~J.\ 2010, \pasp, 122, 248. doi:10.1086/651008
 \bibitem[Candes \& Romberg(2007)]{candes} Candes, E., \& Romberg, J., 2007, Inverse problems, 23, 969.
 \bibitem[Fruchter \& Hook(2002)]{drizzle} Fruchter, A.~S. \& Hook, R.~N.\ 2002, \pasp, 114, 144. doi:10.1086/338393
+\bibitem[Guy et al.(2023)]{desipipeline} Guy, J., Bailey, S., Kremin, A., et al.\ 2023, \aj, 165, 144. doi:10.3847/1538-3881/acb212
 \bibitem[Harris et al.(2020)]{numpy} Harris, C.~R., Millman, K.~J., van der Walt, S.~J., et al.\ 2020, \nat, 585, 357. doi:10.1038/s41586-020-2649-2
 \bibitem[Hastie et al.(2022)]{doubledescent} Hastie, T., Montanari, A., Rosset, S., \& Tibshirani, R. J., 2022, Annals of Statistics, 50, 949. doi:10.1214/21-AOS2133
 \bibitem[Hewett et al.(1985)]{oe} Hewett, P.~C., Irwin, M.~J., Bunclark, P., et al.\ 1985, \mnras, 213, 971. doi:10.1093/mnras/213.4.
@@ -615,9 +616,8 @@ Barnett, A. H., Magland, J. F., \& af~Klinteberg, L., 2019, SIAM J. Sci. Comput.
 \bibitem[Williams et al.(1996)]{hdf} Williams, R.~E., Blacker, B., Dickinson, M., et al.\ 1996, \aj, 112, 1335. doi:10.1086/118105
 \bibitem[Wilson et al.(2019)]{apogeehardware} Wilson, J.C., Hearty, F.R., Skrutskie, M.F., Majewski, S.R., Holtzman, J.A., Eisenstein, D., et al.\ 2019, \pasp, 131, 055001. doi:10.1088/1538-3873/ab0075.
 \bibitem[Wolf et al.(2003)]{combo17} Wolf, C., Meisenheimer, K., Rix, H.-W., et al.\ 2003, \aap, 401, 73. doi:10.1051/0004-6361:20021513
-\bibitem[Zechmeister et al.(2014)]{froe} Zechmeister, M., Anglada-Escud{\'e}, G., \& Reiners, A.\ 2014, \aap, 561, A59. doi:10.1051/0004-6361/201322746
 \bibitem[Zackay, B. \& Ofek (2017)]{zackay} Zackay, B. \& Ofek, E. O.\ 2017, \apj, 836, 188. doi:10.3847/1538-4357/836/2/188
-
+\bibitem[Zechmeister et al.(2014)]{froe} Zechmeister, M., Anglada-Escud{\'e}, G., \& Reiners, A.\ 2014, \aap, 561, A59. doi:10.1051/0004-6361/201322746
 
 \end{thebibliography}
 
