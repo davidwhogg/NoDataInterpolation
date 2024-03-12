@@ -119,8 +119,8 @@ Indeed it has just as much freedom as the shifting-and-stacking standard practic
 The forward-modeling we recommend gets its power from the fact that it generates the data directly and without manipulation, by means of a justifiable likelihood function.
 
 A boundary condition of the work presented here is that the functional requirements of anything we provide must be the same as with standard practice:
-That is, we consider here only procedures that start with individual, single-epoch observations as inputs, along with noise estimates and bad-pixel masks; and we consider only procedures that end with an output ``combined image'' or ``combined spectrum'' that is a set of intensity of flux values on a pixel grid, along with uncertainty estimates and metadata flags.
-That is, the only difference between standard practice and the forward model that we advocate is the purely in the nature of the estimator.
+That is, we consider here only procedures that start with individual, single-epoch observations as inputs, along with noise estimates and bad-pixel masks; and we consider only procedures that end with an output ``combined image'' or ``combined spectrum'' that is a set of intensity or flux values on a pixel grid, along with uncertainty estimates and metadata flags.
+That is, the only difference between standard practice and the forward model that we advocate is purely in the nature of the estimator.
 Unlike the shift-and-coadd approach, the estimator we will deliver will be insensitive to under- or poorly-sampled data, which is not uncommon when astronomical seeing accidentally gets excellent, or in spectrographs that have limited detector pixels (for example, \citealt{apogeehardware}).
 As we will show with artificial data, the estimator we propose yields a faithful estimate of the \emph{true} spectrum, and usually with good noise properties.
 Both of these results make our results good for subsequent precision measurements (e.g., radial velocities, chemical abundances).
@@ -203,7 +203,7 @@ We consider only the PCLSF, because then the sampling by the detector pixels doe
 That is, when the PCLSF is used to model a spectrum, the projection onto the pixels is just a sampling of the function at the pixel centers, and does not involve any convolution over the face of the pixel.
 All that said, we won't explicitly model or use the PCLSF in what follows; we will just assume that our continuous spectral model is a model for the pixel-convolved, finite-resolution spectrum; we won't be doing any convolutions in comparing models and data.
 
-In many cases the LSF or PSF is actually substantially different in different exposures.
+In many cases the LSF or PSF is actually substantially different between exposures.
 This leads to spectral (or image) variations, and violate the assumptions of this model (and also the implicit assumptions underlying standard practice).
 We won't address this kind of variability here, except in some discussion at the end:
 The method presented here can be straightforwardly modified to account for LSF or PSF variations.
@@ -254,7 +254,7 @@ These tools make the spectral combination substantially faster than naive linear
 \paragraph{Time variability}
 When we average data (or build a static model of multi-epoch data), we are implicitly assuming that we do not care about any of the intrinsic variability of the source being observed.
 That is, we are assuming that the changes from observation to observation are solely from either the shifts $\Delta x_i$ or else from effects that we consider to be noise.
-We interpolate the model to account for the shifts, and we combine data to average away this noise.
+We interpolate the model to account for the shifts, and we combine data to average away this noise. % ARC to HOGG: is 'average away' what you want to say here?
 In many cases the stellar variability is itself the subject of study, and then the variability is not entirely noise.
 But from the perspective of this project, any stellar variability is considered to be part of the total additive noise in the spectrum.
 
@@ -356,7 +356,7 @@ Although the equations like \eqref{eq:xtxinvxty} show inverses, it is almost nev
 The reason is that we don't want the inverse matrix itself, we want the outcome of the inverse matrix multiplied by $X^\top\,C^{-}\,Y$.
 For this use case, it is more precise and more more numerically stable to use the linear algebra \texttt{solve()} or \texttt{lstsq()} functions.
 
-Whenever performing\texttt{inv()}, \texttt{solve()}, or \texttt{lstsq()} operations, it is sensible to begin by checking the condition number (the ratio of the largest to the smallest singular value) of the matrix in play.
+Whenever performing \texttt{inv()}, \texttt{solve()}, or \texttt{lstsq()} operations, it is sensible to begin by checking the condition number (the ratio of the largest to the smallest singular value) of the matrix in play.
 Condition numbers larger than $10^8$ are usually trouble, even when the mathematics is being performed at double precision.
 When condition numbers get large, maybe a different basis or a re-scale of some basis functions might be a good idea.
 
@@ -545,7 +545,7 @@ For example, we could imagine forward-modeling generalizations of some of sparse
 
 The combined spectrum computed with the Forward Model(tm) has minimal pixel-to-pixel covariances based on repeated experiments.
 In contrast, the combined spectrum computed with Standard Practice(tm) has substantial pixel-to-pixel covariances.
-This is particularly evident in the second panel of Figure~\ref{fig:noise} near $\ln\lambda = 8.7024$.
+This is particularly evident in the second panel of Figure~\ref{fig:standard} near $\ln\lambda = 8.7024$.
 Here the pixel-to-pixel covariances resulting from Standard Practice(tm) are not purely of academic interest, as the covariances here mimic weak spectral features.
 For example, if a weak Na line existed near this wavelength then a spectroscopist might readily interpret these covariances as real spectral features and report an enhanced Na abundance.
 Checking the strength of other (stronger) Na features would be a sensible check for this interpretation, but often there are few spectral lines available for a given element.
@@ -565,7 +565,7 @@ We effectively assumed that the noise was Gaussian, and zero mean, but these are
 In principle even in the best-case scenarios there are Poisson noise sources, and cosmic rays and faulty detector pixels tend to add in highly skewed, non-zero-mean noise.
 The most important noise assumption made in all this is the zero-mean assumption; when this is wrong, all current spectral (or image) combination methods will be biased (including Standard Practice), unless they employ a likelihood function that accurately represents the detailed noise statistics.
 
-All code used for this project is available at \url{https://github.com/davidwhogg/NoDataInterpolation} and is registered in the Python Package Index as \texttt{NoDataInterpolation}.
+All code used for this project is available at \url{https://github.com/davidwhogg/NoDataInterpolation}.% ANDY to update terminology in code. and is registered in the Python Package Index as \texttt{NoDataInterpolation}.
 
 \paragraph{Software}
 \texttt{numpy} \citep{numpy} ---
@@ -586,7 +586,7 @@ The Flatiron Institute is a division of the Simons Foundation.
 
 HOGG: DID WE USE SDSS DATA?
 
-ARC: DO YOU HAVE GRANTS TO THANK?
+Parts of this research were supported by the Australian Research Council Centre of Excellence for All Sky Astrophysics in 3 Dimensions (ASTRO 3D), through project number CE170100013.
 
 \begin{thebibliography}{dummy}
 \bibitem[Barnett et al.(2019)]{finufft}
