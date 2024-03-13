@@ -1,15 +1,13 @@
-% Copyright 2022, 2023, [add your years here] David W. Hogg (NYU) and Andy Casey (Monash)
+% Copyright 2022, 2023, 2024 David W. Hogg (NYU) and Andy Casey (Monash)
 
 % To-Do items
 % -----------
 % - What's our name? Choose and propagate into where "Forward Model(tm)" is used.
 % - Put in notes about our hypothesis for WHY we get uncorrelated pixels.
-% - Make comments directly about Drizzle to justify the name.
 % - discuss conservation of flux vs intensity.
 % - Hogg notes: Is it clear in the text that we are taking everything to a standard instrument? And the user can decide what that instrument is? That isn't in our current implementation, but it COULD BE. Discussion point?
-% - Related Hogg issue: Any latent spectrum (like our combined spectrum) should be something that COULD BE OBSERVED by some instrument in the future. Hence spectro-perfectionism is wrong (ish).
-% - Audit for rigid terminology. HOGG is currently liking ``combined spectrum'' for the model expectation, for example. And "standard practice" for the traditions of our field.
-% - Audit and fix the sign applied to $\Delta x_i$ everywhere. Wrong relative to code?
+% - Related Hogg issue: Any latent spectrum (like our combined spectrum) should be something that COULD BE OBSERVED by some instrument in the future. Hence spectro-perfectionism is wrong (ish). Add this to the discussion?
+% - Audit and fix the sign applied to $\Delta x_i$ everywhere. Wrong relative to code? HOGG
 % - Write about the two input-data cases.
 % - See bug list in code for other issues with the text--code relationship (noise model; line-formation model).
 % - Deal with all HOGG, ANDY, ARC, XXX, YYY, CITE, etc.
@@ -82,7 +80,7 @@ The only cost is a small increase in computational complexity over that of tradi
 We demonstrate the method with a small data example and we provide open-source sample code for re-use.
 \end{abstract}
 
-\keywords{HOGG --- Foo --- Bar}
+\keywords{data analysis --- image processing --- spectroscopy --- statistics}
 
 \section{Introduction}\label{sec:intro}
 
@@ -98,17 +96,17 @@ This technology is encoded in tools like \texttt{Drizzle} (\citealt{drizzle}).
 
 These traditional practices are reliable and fast.
 However, they will---in some cases---sacrifice some information.
-Minimum-variance unbiased estimators require care in their construction; they are generally maximum-likelihood estimators (\citealt{mvue}). % HOGG
+Minimum-variance unbiased estimators require care in their construction; they are generally maximum-likelihood estimators (\citealt{mvue}).
 The deep, high signal-to-noise image or spectrum we seek is a statistical estimate of some kind of ``true'' or high signal-to-noise image or spectrum, given the noisy data of the individual exposures.
 That is, a combined image is a kind of \emph{prediction}: It is the prediction of what \emph{would have been observed} with a much longer exposure with a much better device.
 In measurement theory, the practice is to combine noisy data into a measurement by building and optimizing a likelihood.
-Of course we don't always think of an image or a spectrum of the sky as the result of applying an \emph{estimator}, but it is.
+Of course we don't always think of a combined (or mosaiced) image of the sky or of an average spectrum of a star as the result of applying an \emph{estimator}, but it is.
 It is just a simultaneous estimate of a lot of different components---a lot of different pixels---all the pixels in the combined image or spectrum.
 
 We are in a period in astrophysics in which exceedingly precise measurements are expected, in both imaging and spectroscopy projects.
 In spectroscopy, in particular, high signal-to-noise spectral measurements are expected to obtain surface-abundance measurements with precisions a few percent, and radial-velocity measurements with precisions of up to one ten-thousandth of a \emph{pixel} (in terms of the Doppler shift).
 Spectral combination methods that distort absorption (or emission) lines will translate into biases, errors, or increased variance in these measurements.
-Spectral combination methods that correlate the noise in the outputs will translate into increased variance, and necessitate more sophisticated downstream measurement techniques.
+Spectral combination methods that correlate the noise in the output combined spectrum will translate into increased variance, and necessitate more sophisticated downstream measurement techniques.
 
 One of the great things about the standard practice---the simple process of shifting and stacking the data---is that this procedure makes almost no assumptions about what the output, combined image or spectrum will look like.
 It isn't really a ``model'' for the data; it is more like a ``summary'' of the data.
@@ -139,7 +137,7 @@ Plus it learns (it isn't told) the epoch-to-epoch spectral shifts.
 There is a heritage for what's presented here in the ``optimal extraction'' literature (for example, \citealt{oe}, \citealt{kelson}, \citealt{froe}, \citealt{sp}):
 Optimal extraction describes a process of extracting a one-dimensional spectral signal from a two-dimensional spectrograph image when that extraction proceeds by forward modeling the two-dimensional data.
 One amusing point, which is out of scope here, is that if the data that are being combined are extracted one-dimensional spectra, and those are, in turn, optimal extractions, then there is almost certainly a better method that moves this spectral combination method directly into the two-dimensional data; that is, there ought to be a method that obviates one-dimensional spectral extraction entirely.
-We hope for a future in which one-dimensional spectra are never extracted from two-dimensional images; in this future the two-dimensional data are the sacred data, not the extractions.
+We hope for a future in which one-dimensional spectra are never extracted from two-dimensional images; in this future the two-dimensional data will be the sacred data, not the extractions.
 
 In real applications, the spectra we extract are often of variable sources, or taken at different position angles on extended objects, such that we don't expect each epoch to be identical.
 Similarly, the \textsl{LSST} data are being taken the way they are because the sky (and point-spread function) will vary.
@@ -231,10 +229,8 @@ It is not band-limited in that the photon noise in the device is independent (or
 
 One interesting question in what follows is whether the forward model we build for the data should itself be restricted to the band limit defined by the spectrograph resolution, or whether it should permit higher frequencies.
 It might surprise the reader to learn that we prefer to let the model capture higher frequencies, even when we think they shouldn't be there for any reasons other than noise, given the hardware.
-More on this below. %% HOGG DO WE COME BACK TO THIS?
+The reason we provide our model the flexibility to go to higher frequencies is that we want our combined spectrum to have the capacity to capture or represent the pixel-to-pixel noise in the estimate; this pixel-to-pixel noise obeys no band limit.
 
-% HOGG SAY: IT is not at all clear here that we are NOT assuming critical sampling. We aren't! Make that clear.
-% In general this section has issues.
 \paragraph{Critical sampling}
 We are not assuming, in what follows, that the data are critically sampled.
 Because of considerations related to the Nyquist frequency on a uniform grid, it is valuable for spectra to be represented with a pixel spacing that is smaller than the width of the PCLSF.
@@ -244,7 +240,7 @@ In general, interpolation works much better on critically sampled data than it d
 
 The fact that we are not interpolating the data means that we don't require critical sampling in the raw data.
 And indeed, there are spectrographs that don't have critically sampled pixel scales (for example, \textsl{APOGEE}; \citealt{apogee}).
-Thus we will not assume that the raw data are critically sampled, but we will produce the output mean spectrum on a grid that is critically sampled.
+Thus we will not assume that the raw data are critically sampled, but we will produce the output combined spectrum on a grid that is critically sampled with respect to the instrument resolution.
 The input and output pixel grids do not need to coincide when the model is a continuous function.
 
 \paragraph{Non-uniform fast Fourier transform}
@@ -267,10 +263,16 @@ Again, the assumption is that the different calibrated or processed observations
 Many of these effects can be accounted for in straightforward generalizations of what we deliver below.
 For example, if there are multiple signals participating, the model would have to expand into something like \textsl{wobble} (\citealt{wobble}).
 For another, if there are normalization variations, a normalization model can be added to the image combination procedure.
-We return to these issues at the end. %% HOGG DO WE?
+That is, if different input spectra have different normalizations, the model for the combined spectrum can be multiplied by a normalization model, unique to each input spectrum, prior to evaluation of the likelihood.
 
 \paragraph{Flux or photon conservation}
-HOGG SHOULD WE PUT WORDS HERE ABOUT WHY WE DON'T CARE ABOUT THIS CONSIDERATION? (1) normalized spectra. (2) It is intensity that a telescope imager measures.
+Some methods for image combination, like \texttt{Drizzle}, have as a hard constraint that they conserve \emph{flux} or \emph{photons}.
+We do not agree with this constraint or condition.
+The fundamental observable in a telescope is intensity, or energy per area per time per wavelength (or per frequency).
+This quantity is related to the phase-space density of photons.
+When the pixel grid of an imager is changed, the expectation of the rate of photon arrivals per pixel will change, but the expectation of the intensity will not change.
+Our position is that the key idea is not the conservation of flux or photons, but that the spectra or images being combined make the same measurements of the intensity (or similarly normalized measurements of intensity) at the detector surface.
+The combined or average image should be the provide the best estimate of this (possibly normalized) intensity.
 
 \section{Method}\label{sec:method}
 
@@ -325,7 +327,7 @@ And now if we choose a final (uniform, say) output pixel grid $x_\star$ in the r
 \begin{align}
     y_\star &= X_\star\,\hat\theta ~,
 \end{align}
-where $X_\star$ is the $M_\star\times P$ evaluation of all of the $P$ basis functions at the locations of the $M_\star$ pixels in the output-spectrum pixel grid $x_\star$.
+where $X_\star$ is the $M_\star\times P$ evaluation of all of the $P$ basis functions at the locations of the $M_\star$ pixels in the output combined-spectrum pixel grid $x_\star$.
 Putting these things together, the output spectrum $y_\star$ can be thought of as just a kind of linear shifting-and-averaging operation on the input spectra $y_i$ (which have been packed into $Y$) according to
 \begin{align}
     y_\star &= A_\star\,Y \\
@@ -337,7 +339,7 @@ But our method never involves, not even implicitly, shifting or interpolating th
 The uncertainty on the combined spectrum $y_\star$ can be estimated in a few ways.
 The information-theoretic answer is that the covariance matrix $C_\star$ delivering the uncertainties on $y_\star$ is
 \begin{align}
-    C_\star &= [X_\star\,(X^\top\,C^{-1}\,X)^{-1}\,X_\star^\top]^{-1} ~.
+    C_\star &= [X_\star\,(X^\top\,C^{-1}\,X)^{-1}\,X_\star^\top]^{-1} ~.\label{eq:outcovar}
 \end{align}
 The naive uncertainty variances are the diagonals of this matrix (and not the inverses of the diagonals of its inverse).
 But, \emph{very importantly}, this is only a correct usage when the input $C_i$ matrices really represented the true uncertainties going in.
@@ -353,7 +355,7 @@ Although the equations like \eqref{eq:xtxinvxty} show matrix multiplies between 
 When $C^{-1}$ is diagonal, the matrix multiply can be done as a broadcast of the vector of diagonal values instead, which is faster (and way less memory intensive).
 
 Although the equations like \eqref{eq:xtxinvxty} show inverses, it is almost never a good idea to use the native linear-algebra inverse function \texttt{inv()} in any implementation of this method.
-The reason is that we don't want the inverse matrix itself, we want the outcome of the inverse matrix multiplied by $X^\top\,C^{-}\,Y$.
+The reason is that we don't want the inverse matrix itself, we want the outcome of the inverse matrix multiplied by $X^\top\,C^{-1}\,Y$.
 For this use case, it is more precise and more more numerically stable to use the linear algebra \texttt{solve()} or \texttt{lstsq()} functions.
 
 Whenever performing\texttt{inv()}, \texttt{solve()}, or \texttt{lstsq()} operations, it is sensible to begin by checking the condition number (the ratio of the largest to the smallest singular value) of the matrix in play.
@@ -366,7 +368,7 @@ Sparse linear algebra packages like that in \texttt{scipy} (\citealt{scipy}) are
 
 If you use any non-uniform fast Fourier transform package, the programming interface of that package will constrain how the frequencies must be ordered in the code, and it will probably require complex-number implementation.
 These have impacts on how the code is written.
-In particular the fact that the output spectrum $y_\ast$ is real-valued constrains the complex Fourier amplitudes.
+In particular the fact that the output combined spectrum $y_\ast$ is real-valued constrains the complex Fourier amplitudes.
 Continuing on the Fourier theme:
 Fourier series, technically, model \emph{periodic} functions.
 The length scale $L$ of that periodicity in \eqref{eq:basis} must be set to a length longer than the $x$-space span of any of the input or output pixel grids.
@@ -438,7 +440,7 @@ The interpolator is a choice; cubic spline, Lanczos, and sinc interpolations are
 Here we choose a cubic spline for convenience, but there are many other choices, including linear, sinc, and Lanczos interpolators, among many others.
 
 The interpolated spectra $y'_i$ are, by construction, all on the same rest-frame wavelength grid $x_\star$ so they can be averaged, with a straight average, a median, an inverse-variance-weighted mean, or any more sophisticated algorithm.
-Here we choose an inverse-variance-weighted mean (HOGG: NO WE DON'T), but zeroing out the inverse variance at the locations of the bad pixels.
+Here we choose an unweighted mean, with the exception that we zero out the contributions of any bad pixels in that mean.
 
 In Standard Practice(tm), this censorship of the bad pixels requires some attention:
 Naive interpolation of an integer (binary actually) bad-pixel mask $b_i$ will not deliver an integer mask $b'_i$.
@@ -470,7 +472,6 @@ We also show the comparison with the true spectral expectation model that was em
 The residuals look correlated (there is ringing which mimics weak spectral features), and the residuals are larger near strong spectral features, especially in the case of the poorly sampled input data.
 
 \paragraph{Noise and noise covariances}
-
 We repeated the above experiments to empirically measure the noise covariances, and to estimate how correlated neighboring pixels are in the output spectrum. For the poorly sampled case and the well sampled case, we generated 64 multi-epoch data sets and computed the mean spectrum using the Forward Model(tm) and Standard Practice(tm). We then computed the empirical covariance in the output spectrum minus the true spectrum, which are shown in \figurename~\ref{fig:noise}.
 In each case, Standard Practice(tm) has a lower noise variance at zero lag, but shows spatially correlated noise over many pixels.
 The Forward Model(tm), in contrast, shows no pixel-to-pixel noise covariances, even when the input data are ill sampled.
@@ -482,9 +483,11 @@ The Forward Model(tm), in contrast, shows no pixel-to-pixel noise covariances, e
     \end{mdframed}
 \end{figure}
 
-HOGG: Add intuition here about WHY the output noise model is close to uncorrelated?
-HOGG: Note that if we choose $P<M_\ast$ we start to see noise correlations in the Forward Model(tm) too.
-That's one of a few reasons we like $P=M_\ast$.
+It is interesting to ask \emph{why} the output combined spectrum in the Forward Model(tm) case has uncorrelated noise.
+It won't in general: If the number of epochs is small, or the coverage in the wavelength domain is spotty, there will in general be pixel-to-pixel covariances in the uncertainties on the combined spectrum.
+However, if the number of epochs is large and the distribution of shift operators $\Delta x_i$ is good, as it is in these experiments, the off-diagonal elements of the output combined-spectrum covariance matrix given in \eqref{eq:outcovar} will tend towards zero.
+The Standard Practice(tm) output combined spectrum always shows correlated noise, and especially when the input data are ill-sampled.
+The reason for this is that interpolation is very sensitive to noise in the ill-sampled case, such that the inter-pixel value of the interpolated function is moved substantially by small movements in the input pixel values, and these inter-pixel regions in the raw data are large relative to the pixel spacing in the combined spectrum spectral grid.
 
 \section{Discussion}\label{sec:discussion}
 
