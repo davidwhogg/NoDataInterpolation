@@ -2,13 +2,13 @@
 
 % To-Do items
 % -----------
-% - What's our name? Frizzle? Choose and propagate into where "Forward Model(tm)" is used.
-% - Hogg notes: Is it clear in the text that we are taking everything to a standard instrument? And the user can decide what that instrument is? That isn't in our current implementation, but it COULD BE. Discussion point?
+% - HOGG check that the code checks out and "just runs".
+% - Is it clear in the text that we are taking everything to a standard instrument? And the user can decide what that instrument is? That isn't in our current implementation, but it COULD BE. Discussion point?
 % - Related Hogg issue: Any latent spectrum (like our combined spectrum) should be something that COULD BE OBSERVED by some instrument in the future. Hence spectro-perfectionism is wrong (ish). Add this to the discussion?
-% - Audit and fix the sign applied to $\Delta x_i$ everywhere. Wrong relative to code? HOGG
-% - Write about the two input-data cases.
-% - See bug list in code for other issues with the text--code relationship (noise model; line-formation model).
-% - Deal with all HOGG, ANDY, ARC, XXX, YYY, CITE, etc.
+% - HOGG: Is the sign of Delta x_i wrong in the code? It is correct in the document now.
+% - See bug list in code for other issues with the text--code relationship (noise model; line-formation model). HOGG
+% - submit to AAS Journals
+% - post to arXiv
 
 \documentclass[modern]{aastex631}
 \usepackage[utf8]{inputenc}
@@ -52,7 +52,7 @@
 
 \begin{document}
 
-\title{\large Fowizzle: Combining spectra or images by forward modeling}
+\title{\large \textsl{Frizzle}: Combining spectra or images by forward modeling}
 
 \author[0000-0003-2866-9403]{David W. Hogg}
 \affiliation{Center for Cosmology and Particle Physics, Department of Physics, New York University}
@@ -248,9 +248,10 @@ These tools make the spectral combination substantially faster than naive linear
 \paragraph{Time variability}
 When we average data (or build a static model of multi-epoch data), we are implicitly assuming that we do not care about any of the intrinsic variability of the source being observed.
 That is, we are assuming that the changes from observation to observation are solely from either the shifts $\Delta x_i$ or else from effects that we consider to be noise.
-We interpolate the model to account for the shifts, and we combine data to average away this noise. % ARC to HOGG: is 'average away' what you want to say here?
+We interpolate the model (not the data!) to account for the shifts, and we combine data to average down this noise.
 In many cases the stellar variability is itself the subject of study, and then the variability is not entirely noise.
 But from the perspective of this project, any stellar variability is considered to be part of the total additive noise in the spectrum.
+We return to this subject below in the Discussion.
 
 \paragraph{Bias, sky, tellurics, flat-field, normalization}
 In what follows, we will assume that the input data are well calibrated in various ways.
@@ -284,10 +285,10 @@ The spectral expectation model $f(x;\theta)$, which will be a representation for
 This function will be very flexible; possibly even an interpolation of control points or a Fourier series; the number $P$ will be roughly the number of pixels we want in our output combined spectrum.
 The statistical model underlying can be expressed qualitatively as
 \begin{align}
-    y_i &= f(x_i + \Delta x_i;\theta) + \mbox{noise} \\
+    y_i &= f(x_i - \Delta x_i;\theta) + \mbox{noise} \\
     f(x;\theta) &= \sum_{j=1}^P a_j\,g_j(x) ~,
 \end{align}
-where we are being a bit loose with terminology (since $x_i$ is a set of positions, not just one position), the noise is additive (but not yet specified), and each of the $P$ functions $g_j(x)$ is a basis function of the representation.
+where we are being a bit loose with terminology (since $y_i$ is a set of fluxes, and $x_i$ is a set of positions, not just one position), the noise is additive (but not yet specified), and each of the $P$ functions $g_j(x)$ is a basis function of the representation.
 
 The noise model is additive (as noted above) and we will assume that the noise contributing to observation $y_i$ is zero-mean and Gaussian, with a known $M_i\times M_i$ variance tensor $C_i$ (or its inverse $C_i^{-1}$).
 If the raw pixel measurements are independent, which they often are (and are often assumed to be), then the $C_i$ (or $C_i^{-1}$) matrices will be diagonal matrices with the individual pixel variances (or inverse variances) down the diagonals.
@@ -326,7 +327,7 @@ And now if we choose a final (uniform, say) output pixel grid $x_\star$ in the r
     y_\star &= X_\star\,\hat\theta ~,
 \end{align}
 where $X_\star$ is the $M_\star\times P$ evaluation of all of the $P$ basis functions at the locations of the $M_\star$ pixels in the output combined-spectrum pixel grid $x_\star$.
-Putting these things together, the output spectrum $y_\star$ can be thought of as just a kind of linear shifting-and-averaging operation on the input spectra $y_i$ (which have been packed into $Y$) according to
+Putting these things together, the output spectrum $y_\star$ can be thought of as just a kind of linear weighted averaging operation on the input spectra $y_i$ (which have been packed into $Y$) according to
 \begin{align}
     y_\star &= A_\star\,Y \\
     A_\star &\equiv X_\star\,(X^\top\,C^{-1}\,X)^{-1}\,X^\top\,C^{-1} ~.
@@ -341,7 +342,7 @@ The information-theoretic answer is that the covariance matrix $C_\star$ deliver
 \end{align}
 The naive uncertainty variances are the diagonals of this matrix (and not the inverses of the diagonals of its inverse).
 But, \emph{very importantly}, this is only a correct usage when the input $C_i$ matrices really represented the true uncertainties going in.
-If you have any concerns about that, then it is way safer to get your uncertainty estimates from bootstrap or jackknife (\citealt{fittingflexible}).
+If you have any concerns about that, then it is way safer to get your uncertainty estimates from bootstrap or jackknife (for a related example, see \citealt{fittingflexible}).
 
 In the end, most users want the combined spectrum $y_\star$ (and perhaps the pixel positions $x_\star$, uncertainty information, and propagated meta data).
 Some users will additionally want (or want to reconstruct) the parameters $\hat\theta$ and the basis functions $g_j(x)$.
@@ -355,6 +356,7 @@ When $C^{-1}$ is diagonal, the matrix multiply can be done as a broadcast of the
 Although the equations like \eqref{eq:xtxinvxty} show inverses, it is almost never a good idea to use the native linear-algebra inverse function \texttt{inv()} in any implementation of this method.
 The reason is that we don't want the inverse matrix itself, we want the outcome of the inverse matrix multiplied by $X^\top\,C^{-1}\,Y$.
 For this use case, it is more precise and more more numerically stable to use the linear algebra \texttt{solve()} or \texttt{lstsq()} functions.
+The only use for \texttt{inv()} is where the full inverse of a matrix is required, as when estimating the full $C_\star$ by \eqref{eq:outcovar}.
 
 Whenever performing \texttt{inv()}, \texttt{solve()}, or \texttt{lstsq()} operations, it is sensible to begin by checking the condition number (the ratio of the largest to the smallest singular value) of the matrix in play.
 Condition numbers larger than $10^8$ are usually trouble, even when the mathematics is being performed at double precision.
@@ -366,16 +368,16 @@ Sparse linear algebra packages like that in \texttt{scipy} (\citealt{scipy}) are
 
 If you use any non-uniform fast Fourier transform package, the programming interface of that package will constrain how the frequencies must be ordered in the code, and it will probably require complex-number implementation.
 These have impacts on how the code is written.
-In particular the fact that the output combined spectrum $y_\ast$ is real-valued constrains the complex Fourier amplitudes.
+In particular the fact that the output combined spectrum $y_\star$ is real-valued constrains the complex Fourier amplitudes.
 Continuing on the Fourier theme:
 Fourier series, technically, model \emph{periodic} functions.
 The length scale $L$ of that periodicity in \eqref{eq:basis} must be set to a length longer than the $x$-space span of any of the input or output pixel grids.
 
-We recommended setting $P=M_\ast$.
+We recommended setting $P=M_\star$.
 We recommend very strongly \emph{against} setting $P\approx M$, where $M=\sum_i M_i$.
 That is, you want the number of parameters to equal your number of output pixels, but you \emph{don't} want your number of parameters to be close to the number of \emph{input} pixels.
 The reason for this is the ``double descent'' phenomenon, which de-stabilizes linear fitting (\citealt{doubledescent}).
-If you find yourself in the situation that $M_\ast\approx M$, reconsider your life choices.
+If you find yourself in the situation that $M_\star\approx M$, reconsider your life choices.
 
 \section{Experiments and results}\label{sec:results}
 
@@ -493,7 +495,7 @@ We have presented a forward-modeling approach to combining spectra or images.
 This method has good properties:
 It doesn't involve interpolating or otherwise distorting the input data;
 it produces a combined or mean spectrum in the format that astronomers traditionally expect;
-it makes no assumptions about the form of the combined spectrum (except that it can be represented on an $M_\ast$-pixel grid);
+it makes no assumptions about the form of the combined spectrum (except that it can be represented on an $M_\star$-pixel grid);
 and it has excellent noise properties in real circumstances.
 The method can work on a wide variety of different kinds of data, but it is especially valuable in projects where the individual input exposures are ill-sampled, or not as well sampled as one might like; our original motivation was the individual \textsl{APOGEE} spectrograph (\citealt{apogeehardware}) exposures.
 It is also good for situations in which the input data have heterogeneous bad pixels or data gaps.
@@ -546,7 +548,7 @@ For example, we could imagine forward-modeling generalizations of some of sparse
 
 The combined spectrum computed with the Forward Model(tm) has minimal pixel-to-pixel covariances based on repeated experiments.
 In contrast, the combined spectrum computed with Standard Practice(tm) has substantial pixel-to-pixel covariances.
-This is particularly evident in the second panel of Figure~\ref{fig:standard} near $\ln\lambda = 8.7024$.
+This is particularly evident in the second panel of Figure~\ref{fig:standard} (say near $\ln\lambda = 8.7024$).
 Here the pixel-to-pixel covariances resulting from Standard Practice(tm) are not purely of academic interest, as the covariances here mimic weak spectral features.
 For example, if a weak Na line existed near this wavelength then a spectroscopist might readily interpret these covariances as real spectral features and report an enhanced Na abundance.
 Checking the strength of other (stronger) Na features would be a sensible check for this interpretation, but often there are few spectral lines available for a given element.
@@ -584,10 +586,7 @@ Adrian Price-Whelan (Flatiron),
 and the Astronomical Data Group at the Flatiron Institute,
 for valuable discussions and input.
 The Flatiron Institute is a division of the Simons Foundation.
-
-HOGG: DID WE USE SDSS DATA?
-
-Parts of this research were supported by the Australian Research Council Centre of Excellence for All Sky Astrophysics in 3 Dimensions (ASTRO 3D), through project number CE170100013.
+This research was supported in part by the Australian Research Council Centre of Excellence for All Sky Astrophysics in 3 Dimensions (ASTRO 3D), through project number CE170100013.
 
 \begin{thebibliography}{dummy}
 \bibitem[Barnett et al.(2019)]{finufft}
