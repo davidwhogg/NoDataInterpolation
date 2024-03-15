@@ -266,13 +266,13 @@ For another, if there are normalization variations, a normalization model can be
 That is, if different input spectra have different normalizations, the model for the combined spectrum can be multiplied by a normalization model, unique to each input spectrum, prior to evaluation of the likelihood.
 
 \paragraph{Flux or photon conservation}
-Some methods for image combination, like \texttt{Drizzle}, have as a hard constraint that they conserve \emph{flux} or \emph{photons}.
+Some methods for image combination, like \texttt{Drizzle} \citep{drizzle}, have as a hard constraint that they conserve \emph{flux} or \emph{photons}.
 We do not agree with this constraint or condition.
 The fundamental observable in a telescope is intensity, or energy per area per time per wavelength (or per frequency).
 This quantity is related to the phase-space density of photons.
 When the pixel grid of an imager is changed, the expectation of the rate of photon arrivals per pixel will change, but the expectation of the intensity will not change.
-Our position is that the key idea is not the conservation of flux or photons, but that the spectra or images being combined make the same measurements of the intensity (or similarly normalized measurements of intensity) at the detector surface.
-The combined or average image should be the provide the best estimate of this (possibly normalized) intensity.
+Our position is that the key idea is not the conservation of flux or photons, but that the spectra or images being combined make the same measurements of the intensity (or similarly normalized or otherwise consistently calibrated measurements of intensity) at the detector surface.
+The combined or average image should be the provide the best estimate of this intensity.
 
 \section{Method}\label{sec:method}
 
