@@ -2,9 +2,7 @@
 
 % To-Do items
 % -----------
-% - What's our name? Choose and propagate into where "Forward Model(tm)" is used.
-% - Put in notes about our hypothesis for WHY we get uncorrelated pixels.
-% - discuss conservation of flux vs intensity.
+% - What's our name? Frizzle? Choose and propagate into where "Forward Model(tm)" is used.
 % - Hogg notes: Is it clear in the text that we are taking everything to a standard instrument? And the user can decide what that instrument is? That isn't in our current implementation, but it COULD BE. Discussion point?
 % - Related Hogg issue: Any latent spectrum (like our combined spectrum) should be something that COULD BE OBSERVED by some instrument in the future. Hence spectro-perfectionism is wrong (ish). Add this to the discussion?
 % - Audit and fix the sign applied to $\Delta x_i$ everywhere. Wrong relative to code? HOGG
@@ -268,9 +266,9 @@ That is, if different input spectra have different normalizations, the model for
 \paragraph{Flux or photon conservation}
 Some methods for image combination, like \texttt{Drizzle} \citep{drizzle}, have as a hard constraint that they conserve \emph{flux} or \emph{photons}.
 We do not agree with this constraint or condition.
-The fundamental observable in a telescope is intensity, or energy per area per time per wavelength (or per frequency).
+The fundamental observable in a telescope is intensity, or energy per area per solid angle per time per wavelength (or per frequency).
 This quantity is related to the phase-space density of photons.
-When the pixel grid of an imager is changed, the expectation of the rate of photon arrivals per pixel will change, but the expectation of the intensity will not change.
+When the mapping between a pixel grid and the sky is changed, the expectation of the rate of photon arrivals per pixel will change (because the pixel effective solid angles change), but the expectation of the intensity will not change.
 Our position is that the key idea is not the conservation of flux or photons, but that the spectra or images being combined make the same measurements of the intensity (or similarly normalized or otherwise consistently calibrated measurements of intensity) at the detector surface.
 The combined or average image should be the provide the best estimate of this intensity.
 
