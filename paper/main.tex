@@ -2,9 +2,8 @@
 
 % To-Do items
 % -----------
-% - HOGG check that the code checks out and "just runs".
 % - Is it clear in the text that we are taking everything to a standard instrument? And the user can decide what that instrument is? That isn't in our current implementation, but it COULD BE. Discussion point?
-% - Related Hogg issue: Any latent spectrum (like our combined spectrum) should be something that COULD BE OBSERVED by some instrument in the future. Hence spectro-perfectionism is wrong (ish). Add this to the discussion?
+% - Related Hogg issue: Any latent spectrum (like our combined spectrum) should be something that COULD BE OBSERVED by some instrument in the future. Hence spectro-perfectionism is wrong (ish). Add this to the Discussion?
 % - HOGG: Is the sign of Delta x_i wrong in the code? It is correct in the document now.
 % - See bug list in code for other issues with the text--code relationship (noise model; line-formation model). HOGG
 % - submit to AAS Journals
@@ -40,10 +39,12 @@
 \setlength{\figurewidth}{0.75\textwidth}
 
 % text macros
-\shorttitle{don't interpolate the data}
+\shorttitle{combining spectra by forward modeling}
 \shortauthors{hogg \& casey}
 \newcommand{\documentname}{\textsl{Article}}
 \newcommand{\sectionname}{Section}
+\newcommand{\secref}[1]{\sectionname~\ref{#1}}
+\newcommand{\name}{\textsl{Frizzle}}
 
 % math macros
 \newcommand{\unit}[1]{\mathrm{#1}}
@@ -52,7 +53,7 @@
 
 \begin{document}
 
-\title{\large \textsl{Frizzle}: Combining spectra or images by forward modeling}
+\title{\large \name: Combining spectra or images by forward modeling}
 
 \author[0000-0003-2866-9403]{David W. Hogg}
 \affiliation{Center for Cosmology and Particle Physics, Department of Physics, New York University}
@@ -130,18 +131,18 @@ The ideas here aren't novel; many projects have avoided data interpolation previ
 For one example, the \textsl{COMBO-17} survey (\citealt{combo17}) took many images of the sky in many bands, and did not co-add the data prior to making measurements, in part to avoid mixing different point-spread functions and pixel samplings.
 For another, some projects have sought to co-add background-dominated images in a near optimal way, but presume that all observations are already registered and re-sampled to the same grid \citep{zackay}.
 For another, the \textsl{DESI} survey ensures that all spectra are extracted on the same wavelength grid, to avoid any interpolation or resampling \citep{desipipeline}.
-What we propose below is actually a sub-problem of the problem solved by the \textsl{wobble} method for determining stellar radial velocities (\citealt{wobble}); \textsl{wobble} is more general because it also includes a tellurics model and also tellurics and stellar variability models.
-Plus it learns (it isn't told) the epoch-to-epoch spectral shifts.
+What we propose below is actually a sub-problem of the problem solved by the \textsl{wobble} method for determining stellar radial velocities (\citealt{wobble}); \textsl{wobble} is more general because it also includes a tellurics model and also tellurics and stellar variability models,
+plus it learns (it isn't told) the epoch-to-epoch spectral shifts.
 There is a heritage for what's presented here in the ``optimal extraction'' literature (for example, \citealt{oe}, \citealt{kelson}, \citealt{froe}, \citealt{sp}):
 Optimal extraction describes a process of extracting a one-dimensional spectral signal from a two-dimensional spectrograph image when that extraction proceeds by forward modeling the two-dimensional data.
-One amusing point, which is out of scope here, is that if the data that are being combined are extracted one-dimensional spectra, and those are, in turn, optimal extractions, then there is almost certainly a better method that moves this spectral combination method directly into the two-dimensional data; that is, there ought to be a method that obviates one-dimensional spectral extraction entirely.
+One amusing point, which is out of scope here, is that if the data that are being combined are extracted one-dimensional spectra, and those are, in turn, optimal extractions, then there is almost certainly an even better method that moves this spectral combination method directly into the two-dimensional data; that is, there ought to be a method that obviates one-dimensional spectral extraction entirely.
 We hope for a future in which one-dimensional spectra are never extracted from two-dimensional images; in this future the two-dimensional data will be the sacred data, not the extractions.
 
 In real applications, the spectra we extract are often of variable sources, or taken at different position angles on extended objects, such that we don't expect each epoch to be identical.
 Similarly, the \textsl{LSST} data are being taken the way they are because the sky (and point-spread function) will vary.
 Hence, in assuming that we only want the time-invariant mean of our data, we are considering here the very easiest problem in a range of possible problems.
 However, we note that all standard shift-and-coadd methods make similar assumptions implicitly.
-Part of our contribution in this \documentname{} is to make implicit assumptions explicit; we do this in \sectionname~\ref{sec:assumptions}.
+Part of our contribution in this \documentname{} is to make implicit assumptions explicit; we do this in \secref{sec:assumptions}.
 
 Finally it is worthy of remark that, in some conceptual sense, there is no reason to \emph{ever} combine the individual spectroscopic exposures at all, for any reason, except possibly visualization and good vibes.
 No information is gained by performing a combination.
@@ -165,7 +166,7 @@ The different observations are made at different relative velocities (star minus
 Because the shifts might be non-linear, the shifts $\Delta x_i$ won't be pure numbers but something more like shift operators.
 That is, if there were a true spectrum $\tilde{y}$, each individual noisy image $y_i$ would be related to that true spectrum by a shift operator acting on that true spectrum, plus noise.
 We will assume here that (from some external information) we know these shift operators very accurately.
-This is often not true, of course; we will return to this point in the discussion.
+This is often not true, of course; we will return to this point in \secref{sec:discussion} below.
 
 \paragraph{Wavelength calibration}
 We will assume that, for every $M_i$-pixel image $y_i$ we also have a $M_i$-vector (or list) $x_i$ of pixel positions, such that each element of $x_i$ gives an accurate and precise value for the wavelength (or position in the spectrograph, in some settings) for each pixel of the image $y_i$.
@@ -201,7 +202,7 @@ All that said, we won't explicitly model or use the PCLSF in what follows; we wi
 
 In many cases the LSF or PSF is actually substantially different between exposures.
 This leads to spectral (or image) variations, and violate the assumptions of this model (and also the implicit assumptions underlying standard practice).
-We won't address this kind of variability here, except in some discussion at the end:
+We won't address this kind of variability here, except for some comments in \secref{sec:discussion}:
 The method presented here can be straightforwardly modified to account for LSF or PSF variations.
 
 \paragraph{Continuous spectral model} 
@@ -251,7 +252,7 @@ That is, we are assuming that the changes from observation to observation are so
 We interpolate the model (not the data!) to account for the shifts, and we combine data to average down this noise.
 In many cases the stellar variability is itself the subject of study, and then the variability is not entirely noise.
 But from the perspective of this project, any stellar variability is considered to be part of the total additive noise in the spectrum.
-We return to this subject below in the Discussion.
+We return to this subject below in \secref{sec:discussion}.
 
 \paragraph{Bias, sky, tellurics, flat-field, normalization}
 In what follows, we will assume that the input data are well calibrated in various ways.
@@ -271,9 +272,9 @@ The fundamental observable in a telescope is intensity, or energy per area per s
 This quantity is related to the phase-space density of photons.
 When the mapping between a pixel grid and the sky is changed, the expectation of the rate of photon arrivals per pixel will change (because the pixel effective solid angles change), but the expectation of the intensity will not change.
 Our position is that the key idea is not the conservation of flux or photons, but that the spectra or images being combined make the same measurements of the intensity (or similarly normalized or otherwise consistently calibrated measurements of intensity) at the detector surface.
-The combined or average image should be the provide the best estimate of this intensity.
+The combined image should provide a good mean estimate of this intensity.
 
-\section{Method}\label{sec:method}
+\section{Method: \name}\label{sec:method}
 
 The problem set-up is that there are $N$ spectral measurements $y_i$ (with $1\leq i\leq N$), each of which is a $M_i$-pixel list of intensities (fluxes maybe).
 Different observations $i$ might have different numbers $M_i$ of pixels.
@@ -281,7 +282,7 @@ The $M_i$ pixels are associated with an $M_i$-length list of positions (waveleng
 Each measurement or observation $i$ is shifted by a shift operator $\Delta x_i$, which can be thought of as a length-$M_i$ list of pixel offsets or shifts, such that the ``rest frame'' or ``unshifted'' positions corresponding to the length-$M_i$ list of data $y_i$ is the list of differences $x_i - \Delta x_i$.
 The goal is to get a combined spectrum that represents the mean of these spectra, in the common rest frame.
 
-The spectral expectation model $f(x;\theta)$, which will be a representation for our combined spectrum, is a function of $x$ controlled by a list $\theta$ of $P$ linear parameters $a_j$ (with $1\leq j\leq P$).
+The spectral expectation model $f(x;\theta)$, which will be a representation of our combined spectrum, is a function of $x$ controlled by a list $\theta$ of $P$ linear parameters $a_j$ (with $1\leq j\leq P$).
 This function will be very flexible; possibly even an interpolation of control points or a Fourier series; the number $P$ will be roughly the number of pixels we want in our output combined spectrum.
 The statistical model underlying can be expressed qualitatively as
 \begin{align}
@@ -382,7 +383,7 @@ If you find yourself in the situation that $M_\star\approx M$, reconsider your l
 \section{Experiments and results}\label{sec:results}
 
 \paragraph{Fake data}
-We demonstrate the effectiveness of the spectral combination method on artificial data.
+We demonstrate the effectiveness of \name{}---the spectral combination method by forward modeling---on artificial data.
 The spectral data were generated from a mean spectral expectation that is a continuum plus a randomly generated line list, where each line equivalent width was set by a random draw from a power law. 
 This line formation model is unphysical, but it is sufficient for our purposes in that it generates fake data that look like stellar spectra.
 Each spectral epoch was given a velocity (Doppler shift) by putting the epochs equally spaced on a sinusoidal variation with a semi-amplitude of $30\,\kmps$ (to emulate the motion of the spectrograph with respect to the Solar System barycenter).
@@ -413,8 +414,8 @@ The two complete data sets are shown in \figurename~\ref{fig:data1} and \figuren
     \end{mdframed}
 \end{figure}
 
-\paragraph{Forward Model(tm)}
-As our main experiment or result, we apply the Forward Model(tm) as described above in \sectionname~\ref{sec:method} to the input data shown in \figurename~\ref{fig:data1} and \figurename~\ref{fig:data2}.
+\paragraph{\name{}}
+As our main experiment or result, we apply the forward model described above in \secref{sec:method} to the input data shown in \figurename~\ref{fig:data1} and \figurename~\ref{fig:data2}.
 In each case, the output pixel grid $x_\star$ is chosen to be well sampled, with a pixel spacing of $1/R$ in the (natural) logarithm of wavelength.
 In order to give the model maximum flexibility, the number $P$ of Fourier modes in the spectral model is set to be equal to the number of pixels $M_\star$ in the pixel representation.
 The log-wavelength scale $L$ of the Fourier basis was set to the pixel spacing times the number of pixels.
@@ -425,12 +426,12 @@ We didn't employ any data weighting; we treated every epoch as identical in term
     \includegraphics[width=\figurewidth]{notebooks/forward1.pdf}\\
     \includegraphics[width=\figurewidth]{notebooks/forward2.pdf}
     \end{center}
-    \caption{The top two panels show the result of running the Forward Model(tm) on the poorly sampled input data, plus the residual away from the truth. The bottom two panels show the same but for the well sampled input data. In each panel, the red line shows the true model used to generate the data.\label{fig:forward}}
+    \caption{The top two panels show the result of running \name{} on the poorly sampled input data, plus the residual away from the truth. The bottom two panels show the same but for the well sampled input data. In each panel, the red line shows the true model used to generate the data.\label{fig:forward}}
     \end{mdframed}
 \end{figure}
-The combined spectrum resulting from the Forward Model(tm) described in \sectionname~\ref{sec:method} is shown in \figurename~\ref{fig:forward}.
+The combined spectrum resulting from the forward model described in \secref{sec:method} is shown in \figurename~\ref{fig:forward}.
 It is compared to the true spectral expectation model that was used to generate the data.
-Also shown in \figurename~\ref{fig:forward} is the residuals, Forward Model(tm) minus truth.
+Also shown in \figurename~\ref{fig:forward} is the residuals, \name{} minus truth.
 The residuals look stationary, approximately Gaussian, and uncorrelated (more on this below).
 
 \paragraph{Standard Practice(tm)}
@@ -472,18 +473,18 @@ We also show the comparison with the true spectral expectation model that was em
 The residuals look correlated (there is ringing which mimics weak spectral features), and the residuals are larger near strong spectral features, especially in the case of the poorly sampled input data.
 
 \paragraph{Noise and noise covariances}
-We repeated the above experiments to empirically measure the noise covariances, and to estimate how correlated neighboring pixels are in the output spectrum. For the poorly sampled case and the well sampled case, we generated 64 multi-epoch data sets and computed the mean spectrum using the Forward Model(tm) and Standard Practice(tm). We then computed the empirical covariance in the output spectrum minus the true spectrum, which are shown in \figurename~\ref{fig:noise}.
+We repeated the above experiments to empirically measure the noise covariances, and to estimate how correlated neighboring pixels are in the output spectrum. For the poorly sampled case and the well sampled case, we generated 64 multi-epoch data sets and computed the mean spectrum using \name{} and Standard Practice(tm). We then computed the empirical covariance in the output spectrum minus the true spectrum, which are shown in \figurename~\ref{fig:noise}.
 In each case, Standard Practice(tm) has a lower noise variance at zero lag, but shows spatially correlated noise over many pixels.
-The Forward Model(tm), in contrast, shows no pixel-to-pixel noise covariances, even when the input data are ill sampled.
+\name{}, in contrast, shows no pixel-to-pixel noise covariances, even when the input data are ill sampled.
 \begin{figure}[t!]
     \begin{mdframed}\begin{center}
     \includegraphics[width=\figurewidth]{notebooks/noise.pdf}
     \end{center}
-    \caption{The empirical noise variance in the output (combined) spectra, and pixel-to-pixel covariances, as a function of pixel lag (pixel offset). The variances were estimated by performing the experiments repeated 64 times, with the same spectral expectations and sampling but unique noise draws. The Forward Model(tm) has slightly larger variance per pixel at zero lag, but vanishing pixel-to-pixel correlations. In contrast, the Standard Practice(tm) leads to correlated pixel values, with correlations extending out to many pixels.\label{fig:noise}}
+    \caption{The empirical noise variance in the output (combined) spectra, and pixel-to-pixel covariances, as a function of pixel lag (pixel offset). The variances were estimated by performing the experiments repeated 64 times, with the same spectral expectations and sampling but unique noise draws. \name{} has slightly larger variance per pixel at zero lag, but vanishing pixel-to-pixel correlations. In contrast, the Standard Practice(tm) leads to correlated pixel values, with correlations extending out to many pixels.\label{fig:noise}}
     \end{mdframed}
 \end{figure}
 
-It is interesting to ask \emph{why} the output combined spectrum in the Forward Model(tm) case has uncorrelated noise.
+It is interesting to ask \emph{why} the output combined spectrum in the forward-modeling case shows uncorrelated noise.
 It won't in general: If the number of epochs is small, or the coverage in the wavelength domain is spotty, there will in general be pixel-to-pixel covariances in the uncertainties on the combined spectrum.
 However, if the number of epochs is large and the distribution of shift operators $\Delta x_i$ is good, as it is in these experiments, the off-diagonal elements of the output combined-spectrum covariance matrix given in \eqref{eq:outcovar} will tend towards zero.
 The Standard Practice(tm) output combined spectrum always shows correlated noise, and especially when the input data are ill-sampled.
@@ -491,8 +492,9 @@ The reason for this is that interpolation is very sensitive to noise in the ill-
 
 \section{Discussion}\label{sec:discussion}
 
-We have presented a forward-modeling approach to combining spectra or images.
-This method has good properties:
+We have presented a forward-modeling approach to combining spectra or images;
+we name it \name.
+\name{} has good properties:
 It doesn't involve interpolating or otherwise distorting the input data;
 it produces a combined or mean spectrum in the format that astronomers traditionally expect;
 it makes no assumptions about the form of the combined spectrum (except that it can be represented on an $M_\star$-pixel grid);
@@ -509,7 +511,7 @@ Our model choice never refers to the properties of the input data pixel grids; i
 Furthermore, interpolation functions (like cubic spline, say, or Lanczos-5, say) pass through every raw-data pixel value exactly.
 There is no point in this method at which the function being fit passes through every (or even any) of the raw-data pixel values.
 
-In the Introduction, we were agnostic about whether we were talking about imaging or spectroscopic data.
+In the Introduction (\secref{sec:intro}), we were agnostic about whether we were talking about imaging or spectroscopic data.
 In the end, our examples are spectroscopic.
 What differences are there between these cases?
 The main difference is that there are many more ``shift'' parameters for imaging than spectroscopy:
@@ -520,16 +522,16 @@ That is, the imaging case is generally more difficult.
 But it is not different, conceptually, from what is presented above.
 That is, once the (now more complicated) shift operators $\Delta x_i$ are known, the problem proceeds by the same mathematics.
 
-Everything presented above depends on a set of strong assumptions, listed in \sectionname~\ref{sec:assumptions}.
+Everything presented above depends on a set of strong assumptions, listed in \secref{sec:assumptions}.
 Perhaps the strongest assumption is that the spectrum or image is not a function of time.
 That is, each epoch spectrum or image is a sampling of the same underlying, true signal.
 This assumption can be wrong for a myriad of reasons:
 The source can vary, the instrument can vary, there can be variable foregrounds or backgrounds, and there can be mistakes or variations in calibration or data processing.
-All of these things happen in real data sets, but the Forward Model(tm) is no more impacted by this than what is done in Standard Practice(tm)!
+All of these things happen in real data sets, but \name{} is no more impacted by this than Standard Practice(tm)!
 
 There are (at least) three attitudes for an investigator to take in the face of variations in the data, from epoch to epoch or exposure to exposure:
 The first is that the procedures we design are designed to deliver the exposure (or signal-to-noise-squared) weighted mean of the observed epochs.
-That is, the fact that the data are varying does not mean that the methodology needs to be modified; without modification, the procedures given above---both the Forward Model(tm) and the Standard Practice(tm)---will produce something like the mean spectrum.
+That is, the fact that the data are varying does not mean that the methodology needs to be modified; without modification, the procedures given above---both \name{} and Standard Practice(tm)---will produce something like the mean spectrum.
 With this attitude, the spectral variations are just another source of noise.
 
 The second attitude to take---and the necessary attitude for many projects---is that the variations must be accounted for, by complexifying the forward model.
@@ -546,8 +548,8 @@ That is, a more sophisticated model could have not just $P$ parameters for the m
 If the variance is low dimensional, or sparse, or compact in important ways, there should be very effective models of this form.
 For example, we could imagine forward-modeling generalizations of some of sparse methods (for example, \citealt{candes}) for applications in which the variability is localized in time or space; or we could imagine generalizations of matrix factorizations (for example, \citealt{hmf}) for applications in which variability is low dimensional (the \textsl{wobble} method has some such functionality; \citealt{wobble}).
 
-The combined spectrum computed with the Forward Model(tm) has minimal pixel-to-pixel covariances based on repeated experiments.
-In contrast, the combined spectrum computed with Standard Practice(tm) has substantial pixel-to-pixel covariances.
+The combined spectrum created by \name{} has minimal pixel-to-pixel covariances based on repeated experiments.
+In contrast, the combined spectrum created by Standard Practice(tm) has substantial pixel-to-pixel covariances.
 This is particularly evident in the second panel of Figure~\ref{fig:standard} (say near $\ln\lambda = 8.7024$).
 Here the pixel-to-pixel covariances resulting from Standard Practice(tm) are not purely of academic interest, as the covariances here mimic weak spectral features.
 For example, if a weak Na line existed near this wavelength then a spectroscopist might readily interpret these covariances as real spectral features and report an enhanced Na abundance.
@@ -583,7 +585,7 @@ Dylan Green (UC Irvine),
 Jon Holtzman (NMSU), 
 Dustin Lang (Perimeter),
 Adrian Price-Whelan (Flatiron),
-and the Astronomical Data Group at the Flatiron Institute,
+and the Astronomical Data Group at the Flatiron Institute
 for valuable discussions and input.
 The Flatiron Institute is a division of the Simons Foundation.
 This research was supported in part by the Australian Research Council Centre of Excellence for All Sky Astrophysics in 3 Dimensions (ASTRO 3D), through project number CE170100013.
