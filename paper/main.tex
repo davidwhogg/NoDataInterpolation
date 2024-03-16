@@ -400,15 +400,15 @@ In each case there are $N=8$ epochs.
 The two complete data sets are shown in \figurename~\ref{fig:data1} and \figurename~\ref{fig:data2}.
 \begin{figure}[t!]
     \begin{mdframed}\begin{center}
-    \includegraphics[width=1.3\figurewidth]{notebooks/data1.pdf}\\
-    \includegraphics[width=\figurewidth]{notebooks/datazoom.pdf}
+    \includegraphics[width=1.3\figurewidth]{data1.pdf}\\
+    \includegraphics[width=\figurewidth]{datazoom.pdf}
     \end{center}
     \caption{The top 8 panels show the $N=8$ epochs of the poorly sampled input data, with $N=8$, $M=171$, and signal-to-noise per pixel of 18 in the continuum. The bad pixels are indicated with grey bars. The bottom 2 panels show a zoom in on one of the epochs, along with the true spectrum used to generate the data. The true spectrum is shown at zero Doppler shift, while each epoch spectrum is at a finite Doppler shift $\Delta x_i$ relative to the spectrograph pixel grid.\label{fig:data1}}
     \end{mdframed}
 \end{figure}
 \begin{figure}[t!]
     \begin{mdframed}\begin{center}
-    \includegraphics[width=1.3\figurewidth]{notebooks/data2.pdf}
+    \includegraphics[width=1.3\figurewidth]{data2.pdf}
     \end{center}
     \caption{Similar to the top panels of \figurename~\ref{fig:data1} except showing the well sampled input data with $N=8$, $M=340$, and signal-to-noise per pixel of 12 in the continuum.\label{fig:data2}}
     \end{mdframed}
@@ -423,8 +423,8 @@ We didn't employ any data weighting; we treated every epoch as identical in term
 
 \begin{figure}[t!]
     \begin{mdframed}\begin{center}
-    \includegraphics[width=\figurewidth]{notebooks/forward1.pdf}\\
-    \includegraphics[width=\figurewidth]{notebooks/forward2.pdf}
+    \includegraphics[width=\figurewidth]{forward1.pdf}\\
+    \includegraphics[width=\figurewidth]{forward2.pdf}
     \end{center}
     \caption{The top two panels show the result of running \name{} on the poorly sampled input data, plus the residual away from the truth. The bottom two panels show the same but for the well sampled input data. In each panel, the red line shows the true model used to generate the data.\label{fig:forward}}
     \end{mdframed}
@@ -451,7 +451,7 @@ The non-conservative approach is just as bad: if we restrict the number (or frac
 
 \begin{figure}[t!]
     \begin{mdframed}\begin{center}
-    \includegraphics[width=\figurewidth]{notebooks/datazoom_interpolated.pdf}
+    \includegraphics[width=\figurewidth]{datazoom_interpolated.pdf}
     \end{center}
     \caption{As part of Standard Practice(tm), it is necessary to interpolate the individual epoch spectra before averaging them. This shows one epoch of the poorly sampled data, interpolated to the output $x_\star$ pixel grid in the rest frame. The interpolated spectrum is compared to the true spectral expectation employed to generate it. Note the ringing induced by the interpolation. Also shown is the censored data, near an interpolated bad pixel and at the edge of the domain. Compare to the bottom panels of \figurename~\ref{fig:data1}.\label{fig:interpolated}}
     \end{mdframed}
@@ -462,8 +462,8 @@ It also grows the bad-pixel mask around the bad pixel.
 
 \begin{figure}[t!]
     \begin{mdframed}\begin{center}
-    \includegraphics[width=\figurewidth]{notebooks/standard1.pdf}\\
-    \includegraphics[width=\figurewidth]{notebooks/standard2.pdf}
+    \includegraphics[width=\figurewidth]{standard1.pdf}\\
+    \includegraphics[width=\figurewidth]{standard2.pdf}
     \end{center}
     \caption{Same as \figurename~\ref{fig:forward} but for the output of Standard Practice(tm). Note that in the poorly sampled case, the residuals appear to be spatially correlated, and the residuals appear to be larger near strong spectral features; more about these issues in the text and in \figurename~\ref{fig:noise}.\label{fig:standard}}
     \end{mdframed}
@@ -478,7 +478,7 @@ In each case, Standard Practice(tm) has a lower noise variance at zero lag, but 
 \name{}, in contrast, shows no pixel-to-pixel noise covariances, even when the input data are ill sampled.
 \begin{figure}[t!]
     \begin{mdframed}\begin{center}
-    \includegraphics[width=\figurewidth]{notebooks/noise.pdf}
+    \includegraphics[width=\figurewidth]{noise.pdf}
     \end{center}
     \caption{The empirical noise variance in the output (combined) spectra, and pixel-to-pixel covariances, as a function of pixel lag (pixel offset). The variances were estimated by performing the experiments repeated 64 times, with the same spectral expectations and sampling but unique noise draws. \name{} has slightly larger variance per pixel at zero lag, but vanishing pixel-to-pixel correlations. In contrast, the Standard Practice(tm) leads to correlated pixel values, with correlations extending out to many pixels.\label{fig:noise}}
     \end{mdframed}
