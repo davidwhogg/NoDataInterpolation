@@ -1,0 +1,42 @@
+[project]
+name = "frizzle"
+version = "0.1.0" 
+readme = "README.md"
+license = {text = "LICENSE.md"}
+description = "Combine spectra by forward modelling" 
+keywords = ["astronomy software"]
+authors = [
+  {name = "Andrew R. Casey", email = "andrew.casey@monash.edu"},
+  {name = "David W. Hogg", email = "david.hogg@nyu.edu"}
+]
+maintainers = [
+  {name = "Andy Casey", email = "andrew.casey@monash.edu"},
+]
+dependencies = [
+  "numpy",
+  "finufft",
+  "pylops",
+  "scipy",
+  "sklearn"
+]
+#requires-python = ">= 3.9"
+
+[classifiers]
+development_status = "4 - Beta"
+intended_audience = "Science/Research"
+natural_language = "English"
+programming_language = "Python :: 3"
+topic = ["Documentation :: Sphinx", "Topic :: Software Development :: Libraries  :: Python Modules"]
+
+[tool.setuptools.packages.find]
+where = ["src/"]
+include = ["frizzle"]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "pytest-cov",
+  "pytest-sugar",
+  "pre-commit",
+  "black",
+]

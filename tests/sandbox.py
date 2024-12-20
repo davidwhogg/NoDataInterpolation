@@ -158,9 +158,7 @@ if __name__ == "__main__":
         return Astar @ theta, None, None
     """
     def resample_spectrum(xs, ys, y_ivars, bs, Delta_xs, xstar, **kwargs):
-
         XX, YY, YY_ivar = get_XX_YY(xs, ys, y_ivars, bs, Delta_xs, *xstar[[0, -1]])
-
         return frizzle(xstar, XX, YY, YY_ivar, **kwargs)
 
 
@@ -202,16 +200,16 @@ if __name__ == "__main__":
     
         (dx1, SNR1, xs1, ys1, y_ivars1, bs1, Delta_xs1, xstar, y_true, line_xs, line_ews, sigma_x) = get_poorly_sampled_regime_data()
 
-        y_ivars1[:] = 1/0.01**2
-
         ll, uu = (8.7020, 8.7021)
         #fake_bad = (ll < xs1) & (xs1 < uu)
         #bs1[:, fake_bad] = 0
+        """
         for i in range(ys1.shape[0]):
             fake_bad = (ll < (xs1 - Delta_xs1[i])) & ((xs1 - Delta_xs1[i]) < uu)
             bs1[i, fake_bad] = 0
             y_ivars1[:, fake_bad] = 10**-2
             y_err[i, fake_bad] = 10
+        """
 
         M1 = len(xs1)
         N1 = len(ys1)
@@ -223,15 +221,20 @@ if __name__ == "__main__":
             x.extend(xs1 - delta_xs)
 
 
-        y_star, C_inv_star, _ = resample_spectrum(xs1, ys1, y_ivars1, bs1, Delta_xs1, xstar)
+        y_star, C_inv_star, flags_star, _ = resample_spectrum(xs1, ys1, y_ivars1, bs1, Delta_xs1, xstar)
 
         z = (y_star - y_true) * np.sqrt(C_inv_star)
 
-        fig, ax = plt.subplots()
+        fig, (ax, ax_combine) = plt.subplots(2,1)
 
-        ax.plot(xstar, y_star, c='k')
+        ax_combine.plot(xstar, y_true, c="tab:blue")
+        ax_combine.plot(xstar, y_star, c='k')
+
+        ylim = ax_combine.get_ylim()
+        ax_combine.fill_between(xstar, y_star - np.sqrt(1/(C_inv_star)), y_star + np.sqrt(1/(C_inv_star)), facecolor="k", alpha=0.5, step="mid")
+        ax_combine.set_ylim(ylim)
+
         ax.plot(xstar, y_true, c="tab:blue")
-        ax.fill_between(xstar, y_star - np.sqrt(1/(C_inv_star)), y_star + np.sqrt(1/(C_inv_star)), facecolor="k", alpha=0.5)
         ax.plot(xstar, y_star - y_true, c="k")
 
         offset = 2.5
@@ -240,9 +243,10 @@ if __name__ == "__main__":
             #ax.fill_between(xs1 - xs, ys1[i] + i + offset - y_err[i], ys1[i] + i + offset + y_err[i], facecolor="k", alpha=0.5)
             
         ax.axvspan(ll, uu, color="tab:red", alpha=0.5)
+        print(f"<z> = {np.mean(z):.2f}")
+        print(f"std(z) = {np.std(z):.2f}")
         print("CHECK", np.abs(np.mean(z)), np.abs(np.mean(z)) < 0.15)
         print("CHECK", np.abs(np.std(z) - 1), np.abs(np.std(z) - 1) < 0.05)
-        raise a
         return None
 
 
@@ -292,15 +296,15 @@ if __name__ == "__main__":
         for delta_xs in Delta_xs2:
             x.extend(xs2 - delta_xs)
 
-        y_star, Cinv_star, _ = resample_spectrum(xstar, x, ys2.flatten(), y_ivars2.flatten(), bs2.flatten())
-
-
+        y_star, Cinv_star, flags_star, _ = resample_spectrum(xs2, ys2, y_ivars2, bs2, Delta_xs2, xstar)
+        
         z = (y_star - y_true) * np.sqrt(Cinv_star)
 
 
         fig, ax = plt.subplots()
 
         ax.plot(xstar, y_star, c='k')
+        ax.fill_between(xstar, y_star - np.sqrt(1/Cinv_star), y_star + np.sqrt(1/Cinv_star), facecolor="k", alpha=0.5, step="mid")
         ax.plot(xstar, y_true, c="tab:blue")
         ax.plot(xstar, y_star - y_true, c="k")
 
@@ -378,7 +382,7 @@ if __name__ == "__main__":
                 for delta_xs in Delta_xs:
                     x.extend(xs - delta_xs)
 
-                y_star, Cinv_star, _ = resample_spectrum(xs, ys, y_ivars, bs, Delta_xs, xstar, lsqr_kwds=dict(calc_var=False))
+                y_star, Cinv_star, flags_star, _ = resample_spectrum(xs, ys, y_ivars, bs, Delta_xs, xstar, lsqr_kwds=dict(calc_var=False), censor_missing_regions=False)
                 ystar_sp, foo, bar = Standard_Practice_tm(xs, ys, bs, Delta_xs, xstar)
                 lags, covars = covariances(y_star - y_true)
                 # sometimes standard practice will have nans at the edge
@@ -419,7 +423,7 @@ if __name__ == "__main__":
         return None
 
     fig_poorly_sampled = test_poorly_sampled_regime()
-
-    #fig = test_lag()
-    #fig_well_sampled = test_well_sampled_regime()
+    fig_well_sampled = test_well_sampled_regime()
+    
+    fig = test_lag()
     
