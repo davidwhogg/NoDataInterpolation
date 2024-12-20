@@ -17,7 +17,7 @@ dependencies = [
   "finufft",
   "pylops",
   "scipy",
-  "sklearn"
+  "scikit-learn"
 ]
 #requires-python = ">= 3.9"
 
