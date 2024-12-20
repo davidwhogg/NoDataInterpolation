@@ -4,9 +4,10 @@ import numpy.typing as npt
 import warnings
 from pylops import LinearOperator, MatrixMult, Diagonal, Identity
 from scipy.linalg import lstsq
-from scipy.sparse.linalg import lsqr, lsmr
+from scipy.sparse.linalg import lsqr, lsmr, gmres
 from sklearn.neighbors import KDTree
 from typing import Optional, Union, Tuple
+
 
 from .operator import FrizzleOperator, Diagonal
 from .utils import ensure_dict, check_inputs, separate_flags
@@ -41,6 +42,7 @@ def frizzle(
     
     :param mask: [optional]
         The mask of the individual spectra. If given, this should be a boolean array (pixels with `True` get ignored) of shape (N, ).
+        The mask is used to ignore pixel flux when combining spectra, but the mask is not used when computing combined pixel flags.
     
     :param flags: [optional]
         An optional integer array of bitwise flags. If given, this should be shape (N, ).
@@ -59,12 +61,12 @@ def frizzle(
         Keyword arguments to pass to the `scipy.sparse.linalg.lsqr()` function.
     
     :returns:
-        A three-length tuple of ``(flux, ivar, flags)`` where ``flux`` is the resampled flux values 
-        and ``ivar`` is the variance of the resampled fluxes, and ``flags`` are the resampled flags.
+        A four-length tuple of ``(flux, ivar, flags, meta)`` where ``flux`` is the resampled flux values 
+and ``ivar`` is the variance of the resampled fluxes, and ``flags`` are the resampled flags, and ``meta`` is a dictionary.
     """
 
     n_modes = n_modes or len(λ_out)
-    lsqr_kwds = ensure_dict(lsqr_kwds, show=False, calc_var=True)
+    lsqr_kwds = ensure_dict(lsqr_kwds, calc_var=True)
     finufft_kwds = ensure_dict(finufft_kwds)
 
     λ, flux, ivar, mask = check_inputs(λ_out, λ, flux, ivar, mask)
@@ -72,27 +74,31 @@ def frizzle(
     λ_all = np.hstack([λ[~mask], λ_out])
     λ_min, λ_max = (np.min(λ_all), np.max(λ_all))
 
-    # This is setting the scale to be such that the Fourier modes are in the range [0, π].
-    scale = np.pi / (λ_max - λ_min)
+    # This is setting the scale to be such that the Fourier modes are in the range [0, 2π].
+    scale = 2 * np.pi / (λ_max - λ_min)
     x = (λ[~mask] - λ_min) * scale
     x_star = (λ_out - λ_min) * scale
 
     A = FrizzleOperator(x, n_modes, **finufft_kwds)
-
     Y = flux[~mask]
     C_inv = Diagonal(np.ascontiguousarray(ivar[~mask]))
+    ATCinv = A.T @ C_inv
 
-    θ, *extras = lsqr(A, Y, **lsqr_kwds)
-    
+    θ, *extras = lsqr(ATCinv @ A, ATCinv @ Y, **lsqr_kwds)
     meta = dict(zip(["istop", "itn", "r1norm", "r2norm", "anorm", "acond", "arnorm", "xnorm", "var"], extras))
-
+    
     A_star = FrizzleOperator(x_star, n_modes, **finufft_kwds)
     y_star = A_star @ θ
 
-    # I just don't yet trust the variance returned by lsqr.
-    #C_inv_star = np.diag((A_star @ Diagonal(meta["var"]) @ A_star.H).todense())
-    AHCinvA_inv, *_ = lstsq((A.H @ C_inv @ A).todense(), np.eye(n_modes))
-    C_inv_star = 1/np.diag((A_star @ AHCinvA_inv) @ A_star.H.todense())
+    # This is the cheapest way to compute the inverse variance of the resampled spectrum.
+    if lsqr_kwds.get("calc_var", False):
+        C_inv_star = 1/np.diag((A_star @ Diagonal(meta["var"]**0.5) @ A_star.T).todense())
+    else:
+        C_inv_star = np.zeros_like(y_star)
+
+    # Alternatively:
+    #ATCinvA_inv, *_ = lstsq((A.T @ C_inv @ A).todense(), np.eye(n_modes))
+    #C_star = np.diag((A_star @ MatrixMult(ATCinvA_inv) @ A_star.T).todense())
     
     if censor_missing_regions:
         # Set NaNs for regions where there were NO data.
@@ -102,13 +108,25 @@ def frizzle(
 
         no_data = np.hstack([distances[:-1, 0] > np.diff(x_star), False])
         meta["no_data_mask"] = no_data
-        y_star[no_data] = np.nan
-        C_inv_star[no_data] = 0
+        if np.any(no_data):
+            y_star[no_data] = np.nan
+            C_inv_star[no_data] = 0
     
-    return (y_star, C_inv_star, {})
+    flags_star = combine_flags(λ_out, λ, flags)
+
+    return (y_star, C_inv_star, flags_star, meta)
 
 
-
+def combine_flags(x_star, x, flags):
+    flags_star = np.zeros(x_star.size, dtype=np.uint64 if flags is None else flags.dtype)
+    x_star_T = x_star.reshape((-1, 1))
+    diff_x_star = np.diff(x_star)
+    for bit, flag in separate_flags(flags).items():
+        tree = KDTree(x[flag].reshape((-1, 1)))            
+        distances, indices = tree.query(x_star_T, k=1)
+        within_pixel = np.hstack([distances[:-1, 0] <= diff_x_star, False])
+        flags_star[within_pixel] += 2**bit
+    return flags_star
 
 
 def resample_spectrum(
@@ -411,3 +429,57 @@ if __name__ == "__main__":
 
         A1 = design_matrix_as_is(x/2, P)
         assert np.allclose(A.todense()[:, mode_indices], A1)
+
+'''
+
+
+
+
+
+        flags = np.zeros(λ.size, dtype=np.uint64)
+        for n in np.random.randint(1, 63, size=40):
+            for position in np.random.randint(0, λ.size, size=10):
+                m = np.abs(λ - λ[position]) < 5e-5
+                flags[m] += (2**n).astype(flags.dtype)
+        
+        from time import time
+        t_kdtree = time()
+        kdtree_flags = combine_flags_by_kdtree(x_star, x, flags)
+        t_kdtree = time() - t_kdtree
+        
+        # A_star @ (A.T @ A)^(-1) @ A.T @ flag
+        t_solve = time()
+        foo = np.linalg.lstsq((A.T @ A).todense(), np.eye(338))[0]
+        t_solve = time() - t_solve
+
+        import matplotlib.pyplot as plt
+        print(t_kdtree, t_solve)
+        for bit, flag in separate_flags(flags).items():
+            
+            fig, ax = plt.subplots()
+            ax.scatter(λ, flag)
+            bar =  A_star @ MatrixMult(foo) @ A.T @ flag
+            ax.plot(λ_out, bar)
+            ax.plot(λ_out, (bar > 0.1).astype(int), c="tab:orange")
+
+            ax.plot(λ_out, (((kdtree_flags & (2**bit))) > 0).astype(int), c="tab:green")
+            raise a
+
+
+
+        raise a
+
+
+        if flags is not None:
+            _, XTC_invX_invXTCinv = _XTCinvX_invXTCinv(X, Cinv, **linalg_kwds)
+            A_star = X_star @ XTC_invX_invXTCinv
+
+            separated_flags = _separate_flags(flags)
+            for bit, flag in separated_flags.items():
+                separate_flags[bit] = A_star @ flag
+                        
+            # Reconstruct flags
+            for k, values in separate_flags.items():
+                flag = (values > min_resampled_flag_value).astype(int)
+                flags_star_masked += (flag * (2**k)).astype(flags_star_masked.dtype)
+'''                

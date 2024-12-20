@@ -27,19 +27,19 @@ class FrizzleOperator(LinearOperator):
             self.DTYPE_REAL, self.DTYPE_COMPLEX = (np.float32, np.complex64)
         super().__init__(dtype=x.dtype, shape=(len(x), n_modes))
         self.explicit = False
-        kwds = dict(dtype=self.DTYPE_COMPLEX.__name__, modeord=0, **kwargs)
-        self._plan_matvec = finufft.Plan(2, (n_modes, ), **kwds)
-        self._plan_rmatvec = finufft.Plan(1, (n_modes, ), **kwds)
+        self.finufft_kwds = dict(dtype=self.DTYPE_COMPLEX.__name__, n_modes_or_dim=(n_modes, ), modeord=0, **kwargs)
+        self._plan_matvec = finufft.Plan(2, **self.finufft_kwds)
+        self._plan_rmatvec = finufft.Plan(1, **self.finufft_kwds)
         self._plan_matvec.setpts(x)
         self._plan_rmatvec.setpts(x)
-        self._Hx = n_modes // 2 + (n_modes % 2)
+        self._hx = n_modes // 2 
         return None
     
     def _pre_process_matvec(self, c):
-        return np.hstack([1j * c[:self._Hx], c[self._Hx:]], dtype=self.DTYPE_COMPLEX)
+        return np.hstack([-1j * c[:self._hx], c[self._hx:]], dtype=self.DTYPE_COMPLEX)
 
     def _post_process_rmatvec(self, f):
-        return np.hstack([f[:self._Hx].imag, f[self._Hx:].real], dtype=self.DTYPE_REAL)
+        return np.hstack([-f[:self._hx].imag, f[self._hx:].real], dtype=self.DTYPE_REAL)
 
     def _matvec(self, c):
         return self._plan_matvec.execute(self._pre_process_matvec(c)).real

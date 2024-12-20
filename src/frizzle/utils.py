@@ -42,6 +42,6 @@ def separate_flags(flags: Optional[npt.ArrayLike] = None):
         for q in range(1 + int(np.log2(np.max(flags)))):
             is_set = (flags & np.uint64(2**q)) > 0
             if any(is_set):
-                separated[q] = np.clip(is_set, 0, 1)
+                separated[q] = is_set.astype(bool)
     return separated    
 
