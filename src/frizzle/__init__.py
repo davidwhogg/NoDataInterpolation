@@ -13,6 +13,8 @@ from .operator import FrizzleOperator, Diagonal
 from .utils import ensure_dict, check_inputs, separate_flags
 
 
+from .diag_utils import stochastic_lanczos_diag, unit_vector_diagonal_estimator, hutchinson_diagonal_estimator
+
 def frizzle(
     λ_out: npt.ArrayLike,
     λ: npt.ArrayLike,
@@ -93,6 +95,44 @@ def frizzle(
     # This is the cheapest way to compute the inverse variance of the resampled spectrum.
     if lsqr_kwds.get("calc_var", False):
         C_inv_star = 1/np.diag((A_star @ Diagonal(meta["var"]**0.5) @ A_star.T).todense())
+
+        Op = (A_star @ Diagonal(meta["var"]**0.5) @ A_star.T)
+
+
+        from time import time
+        t_dense = -time()
+        foo = np.diag(Op.todense())
+        t_dense += time()
+
+        t_hutchinson = -time()
+        hutchinson = hutchinson_diagonal_estimator(Op.matvec, Op.shape, num_samples=int(0.1 * Op.shape[0]), rademacher=False)
+        t_hutchinson += time()
+
+        print(f"Dense: {t_dense:.2f}s")
+        print(f"Hutchinson: {t_hutchinson:.2f}s (error: {np.linalg.norm(foo - hutchinson)})")
+
+        raise a
+        """
+
+        t_lanczos = -time()
+        bar = stochastic_lanczos_diag(Op.matvec, Op.rmatvec, Op.shape, num_samples=100, lanczos_steps=30)
+        t_lanczos += time()
+
+        t_exact = -time()
+        exact = unit_vector_diagonal_estimator(Op.matvec, Op.shape, num_samples=100)
+        t_exact += time()
+
+        t_hutchinson = -time()
+        hutchinson = hutchinson_diagonal_estimator(Op.matvec, Op.shape, num_samples=30)
+        t_hutchinson += time()
+
+        print(f"Dense: {t_dense:.2f}s")
+        print(f"Lanczos: {t_lanczos:.2f}s (error: {np.linalg.norm(foo - bar)})")
+        print(f"Exact: {t_exact:.2f}s (error: {np.linalg.norm(foo - exact)})")
+        print(f"Hutchinson: {t_hutchinson:.2f}s (error: {np.linalg.norm(foo - hutchinson)})")
+        """
+
+
     else:
         C_inv_star = np.zeros_like(y_star)
 
