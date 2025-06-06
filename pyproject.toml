@@ -17,9 +17,11 @@ dependencies = [
   "finufft",
   "pylops",
   "scipy",
-  "scikit-learn"
+  "scikit-learn",
+  "jax>=0.4.30",
+  "jaxlib>=0.4.30",
 ]
-#requires-python = ">= 3.9"
+requires-python = ">= 3.9"
 
 [classifiers]
 development_status = "4 - Beta"
