@@ -17,7 +17,7 @@ uv add frizzle
 
 ## Authors:
 - **David W Hogg** (NYU) (MPIA) (Flatiron)
-- **Andy Casey** (Flatiron) (Monash)
+- **Andy Casey** (Monash) (Flatiron)
 
 ## License:
 Copyright 2022-2025 the authors.
