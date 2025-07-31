@@ -9,23 +9,27 @@ Combine spectra by forward modeling.
 
 </div>
 
+This is an implementation of `frizzle` as described in [Hogg & Casey (20xx)](https://arxiv.org/abs/2403.11011).
+
 # Install
 
 ```
 uv add frizzle
 ```
 
-## Authors:
+# Getting Started Guide
+
+[todo]
+
+# Authors
 - **David W Hogg** (NYU) (MPIA) (Flatiron)
 - **Andy Casey** (Monash) (Flatiron)
 
-## License:
-Copyright 2022-2025 the authors.
-All code herein is licensed for reuse under the open-source *MIT License*.
-See the file `LICENSE` for more details.
 
-## Contributors / Acknowledgements:
-- **Matt Daunt** (NYU)
-- **Adrian Price-Whelan** (Flatiron)
-- **Thomas Hilder** (Monash)
-- The **Astronomical Data Group** at the Flatiron Institute, and the **Inference Group** at Monash University.
+With contributions from:
+- **Matt Daunt** (NYU);
+- **Thomas Hilder** (Monash);
+- **Adrian Price-Whelan** (Flatiron);
+- the **Astronomical Data Group** at the Flatiron Institute; and 
+- the **Inference Group** at Monash University.
+

@@ -42,4 +42,5 @@ dev = [
   "pytest-sugar",
   "pre-commit",
   "black",
+  "coveralls"
 ]
