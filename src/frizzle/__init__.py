@@ -11,7 +11,6 @@ from nifty_solve.jax_operators import JaxFinufft1DRealOperator
 
 from .utils import ensure_dict, check_inputs, combine_flags
 
-
 def frizzle(
     λ_out: npt.ArrayLike,
     λ: npt.ArrayLike,
@@ -74,15 +73,15 @@ def frizzle(
 
     λ_out, λ, flux, ivar, mask = check_inputs(λ_out, λ, flux, ivar, mask)
 
-    λ_all = np.hstack([λ[~mask], λ_out])
-    λ_min, λ_max = (np.min(λ_all), np.max(λ_all))
+    λ_all = jnp.hstack([λ[~mask], λ_out])
+    λ_min, λ_max = (jnp.min(λ_all), jnp.max(λ_all))
 
     small = kwargs.get("small", 1e-5)
-    scale = (1 - small) * 2 * np.pi / (λ_max - λ_min)
+    scale = (1 - small) * 2 * jnp.pi / (λ_max - λ_min)
     x = (λ[~mask] - λ_min) * scale
     x_star = (λ_out - λ_min) * scale
 
-    C_inv_sqrt = np.sqrt(ivar[~mask])
+    C_inv_sqrt = jnp.sqrt(ivar[~mask])
 
     A = JaxFinufft1DRealOperator(x, n_modes, **finufft_kwds)
 
@@ -90,7 +89,11 @@ def frizzle(
     Y_w = C_inv_sqrt * flux[~mask]
     θ, *extras = lsqr(A_w, Y_w, **lsqr_kwds)
     
-    meta = dict(zip(["istop", "itn", "r1norm", "r2norm", "anorm", "acond", "arnorm", "xnorm", "var"], extras))
+    keys = (
+        "istop", "itn", "r1norm", "r2norm", "anorm", "acond", "arnorm", 
+        "xnorm", "var"
+    )
+    meta = dict(zip(keys, extras))
 
     A_star = JaxFinufft1DRealOperator(x_star, n_modes, **finufft_kwds)
     y_star = np.array(A_star @ θ)
@@ -98,18 +101,19 @@ def frizzle(
     nll = lambda θ: 0.5 * jnp.sum(ivar[~mask] * (A @ θ - flux[~mask])**2)
     
     hess = hessian(nll)(θ)
-    I = np.eye(n_modes)
+    I = jnp.eye(n_modes)
 
     # When resampling a single epoch, you might have a bad time.
     for rcond in [None, 1e-15, 1e-12, 1e-9, 1e-6]:
-        C, *extras = np.linalg.lstsq(hess, I, rcond=rcond)
-        if np.min(np.diag(C)) > 0:
+        C, *extras = jnp.linalg.lstsq(hess, I, rcond=rcond)
+        if jnp.min(jnp.diag(C)) > 0:
             break
 
     if rcond is not None:
         warnings.warn(f"Condition number of C is high, rcond={rcond:.2e}")
 
     meta["rcond"] = rcond
+
     C_inv_star = 1/np.diag(A_star @ (A_star @ C).T)
     
     if censor_missing_regions:
