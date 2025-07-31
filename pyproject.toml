@@ -1,6 +1,6 @@
 [project]
 name = "frizzle"
-version = "0.1.2" 
+version = "0.1.3" 
 readme = "README.md"
 license = {text = "LICENSE.md"}
 description = "Combine spectra by forward modelling" 
