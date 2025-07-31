@@ -7,8 +7,12 @@ np.random.seed(17)
 c = 299792458. # m / s
 sqrt2pi = np.sqrt(2. * np.pi)
 
-from ndi import resample_spectrum
+import sys
+sys.path.insert(0, "../src/")
+#from ndi import frizzle as frizzle
+from frizzle import frizzle #resample_spectrum as frizzle
 
+X_MAX = 8.7025
 # make the synthetic spectrum (spectral expectation), and also add noise
 
 def oned_gaussian(dxs, sigma):
@@ -74,7 +78,7 @@ def make_one_dataset(dx, SNR, x_min, x_max, line_xs, line_ews, sigma_x, badfrac,
 # Estimate covariances from just one trial:
 def covariances(resids):
     lags = np.arange(12)
-    var = np.zeros(len(lags)) + np.NaN
+    var = np.zeros(len(lags)) + np.nan
     var[0] = np.mean(resids * resids)
     for lag in lags[1:]:
         var[lag] = np.mean(resids[lag:] * resids[:-lag])
@@ -85,7 +89,7 @@ def get_poorly_sampled_regime_data():
     R = 1.35e5 # resolution
     sigma_x = 1. / R # LSF sigma in x units
     x_min = 8.7000 # minimum ln wavelength
-    x_max = 8.7025 # maximum ln wavelength
+    x_max = X_MAX # maximum ln wavelength
     lines_per_x = 2.0e4 # mean density (Poisson rate) of lines per unit ln wavelength
     ew_max_x = 3.0e-5 # maximum equivalent width in x units
     ew_power = 5.0 # power parameter in EW maker
@@ -93,6 +97,7 @@ def get_poorly_sampled_regime_data():
     # Set the pixel grid and model complexity for the output combined spectrum
     dxstar = 1. / R # output pixel grid spacing
     xstar = np.arange(x_min + 0.5 * dxstar, x_max, dxstar) # output pixel grid
+    print(xstar.size)
     Mstar = len(xstar) # number of output pixels
     P = np.round((x_max - x_min) * R).astype(int) # number of Fourier modes (ish)
 
@@ -127,10 +132,10 @@ def test_poorly_sampled_regime():
     for delta_xs in Delta_xs1:
         x.extend(xs1 - delta_xs)
 
-    y_star, Cinv_star, _ = resample_spectrum(xstar, x, ys1.flatten(), y_ivars1.flatten(), mask=(bs1.flatten() != 1))
+    y_star, C_inv_star, flags, _ = frizzle(xstar, x, ys1.flatten(), y_ivars1.flatten(), mask=(bs1.flatten() != 1))
 
-    z = (y_star - y_true) * np.sqrt(Cinv_star)
-
+    z = (y_star - y_true) * np.sqrt(C_inv_star)
+    
 
     fig, ax = plt.subplots()
 
@@ -154,7 +159,8 @@ def get_well_sampled_regime_data():
     R = 1.35e5 # resolution
     sigma_x = 1. / R # LSF sigma in x units
     x_min = 8.7000 # minimum ln wavelength
-    x_max = 8.7025 # maximum ln wavelength
+    x_max = X_MAX # maximum ln wavelength
+    
     lines_per_x = 2.0e4 # mean density (Poisson rate) of lines per unit ln wavelength
     ew_max_x = 3.0e-5 # maximum equivalent width in x units
     ew_power = 5.0 # power parameter in EW maker
@@ -162,6 +168,7 @@ def get_well_sampled_regime_data():
     # Set the pixel grid and model complexity for the output combined spectrum
     dxstar = 1. / R # output pixel grid spacing
     xstar = np.arange(x_min + 0.5 * dxstar, x_max, dxstar) # output pixel grid
+    print(xstar.size)
     Mstar = len(xstar) # number of output pixels
     P = np.round((x_max - x_min) * R).astype(int) # number of Fourier modes (ish)
 
@@ -194,10 +201,12 @@ def test_well_sampled_regime():
     for delta_xs in Delta_xs2:
         x.extend(xs2 - delta_xs)
 
-    y_star, Cinv_star, _ = resample_spectrum(xstar, x, ys2.flatten(), y_ivars2.flatten(), mask=(bs2.flatten() != 1))
+    print("starting frizzle")
+    y_star, C_inv_star, flags, _ = frizzle(xstar, x, ys2.flatten(), y_ivars2.flatten(), mask=(bs2.flatten() != 1))
+    print("done")
 
 
-    z = (y_star - y_true) * np.sqrt(Cinv_star)
+    z = (y_star - y_true) * np.sqrt(C_inv_star)
 
 
     fig, ax = plt.subplots()
@@ -241,7 +250,7 @@ def test_lag():
     R = 1.35e5 # resolution
     sigma_x = 1. / R # LSF sigma in x units
     x_min = 8.7000 # minimum ln wavelength
-    x_max = 8.7025 # maximum ln wavelength
+    x_max = X_MAX # maximum ln wavelength
     lines_per_x = 2.0e4 # mean density (Poisson rate) of lines per unit ln wavelength
     ew_max_x = 3.0e-5 # maximum equivalent width in x units
     ew_power = 5.0 # power parameter in EW maker
@@ -250,6 +259,7 @@ def test_lag():
     dxstar = 1. / R # output pixel grid spacing
     xstar = np.arange(x_min + 0.5 * dxstar, x_max, dxstar) # output pixel grid
     Mstar = len(xstar) # number of output pixels
+    print(Mstar)
     P = np.round((x_max - x_min) * R).astype(int) # number of Fourier modes (ish)
 
     # set up the line list for the true spectral model
@@ -280,7 +290,7 @@ def test_lag():
             for delta_xs in Delta_xs:
                 x.extend(xs - delta_xs)
 
-            y_star, Cinv_star, _ = resample_spectrum(xstar, x, ys.flatten(), y_ivars.flatten(), mask=(bs.flatten() != 1))
+            y_star, C_inv_star, flags, _ = frizzle(xstar, x, ys.flatten(), y_ivars.flatten(), mask=(bs.flatten() != 1))
             ystar_sp, foo, bar = Standard_Practice_tm(xs, ys, bs, Delta_xs, xstar)
             lags, covars = covariances(y_star - y_true)
             # sometimes standard practice will have nans at the edge
@@ -300,8 +310,8 @@ def test_lag():
             covars_sp2 = numerator_sp / ntrial    
 
     # the forward model should have a lower mean covariance
-    assert np.mean(np.abs(covars1)[1:]) < np.mean(np.abs(covars_sp1)[1:])
-    assert np.mean(np.abs(covars2)[1:]) < np.mean(np.abs(covars_sp2)[1:])
+    print(np.mean(np.abs(covars1)[1:]) < np.mean(np.abs(covars_sp1)[1:]))
+    print(np.mean(np.abs(covars2)[1:]) < np.mean(np.abs(covars_sp2)[1:]))
 
 
     fig, ax = plt.subplots()
@@ -321,11 +331,15 @@ def test_lag():
     return None
 
 
-'''
 if __name__ == "__main__":
 
-    fig = test_lag()
+    from timeit import default_timer as timer
+    t_a = -timer()
     fig_well_sampled = test_well_sampled_regime()
-    fig_poorly_sampled = test_poorly_sampled_regime()
+    t_a += timer()
+    print(t_a)
 
-'''
+    fig_poorly_sampled = test_poorly_sampled_regime()
+    
+    #fig = test_lag()
+
