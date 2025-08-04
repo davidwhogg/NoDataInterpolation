@@ -14,13 +14,12 @@ maintainers = [
 ]
 dependencies = [
   "numpy",
-  "finufft",
-  "pylops",
   "scipy",
   "scikit-learn",
   "jax>=0.4.30",
   "jaxlib>=0.4.30",
-  "nifty-solve>=0.1.2"
+  "jax-finufft>=0.1.0",
+  "lineax"
 ]
 requires-python = ">= 3.9"
 
@@ -42,5 +41,7 @@ dev = [
   "pytest-sugar",
   "pre-commit",
   "black",
-  "coveralls"
+  "coveralls",
+  "ipython",
+  "matplotlib"
 ]

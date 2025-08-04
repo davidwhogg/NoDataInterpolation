@@ -1,32 +1,29 @@
 
 import jax
+import jax.numpy as jnp
+import lineax as lx
+import numpy as np
+from functools import partial
+from sklearn.neighbors import KDTree
+from typing import Optional
+
+from jax_finufft import nufft2
+from .utils import check_inputs, combine_flags
 
 jax.config.update("jax_enable_x64", True)
 
-import numpy as np
-import numpy.typing as npt
-import warnings
-from pylops import Diagonal
-from scipy.sparse.linalg import lsqr
-from sklearn.neighbors import KDTree
-from typing import Optional
-from jax import (numpy as jnp, hessian)
-from nifty_solve.jax_operators import JaxFinufft1DRealOperator
-
-from .utils import ensure_dict, check_inputs, combine_flags
-
 def frizzle(
-    λ_out: npt.ArrayLike,
-    λ: npt.ArrayLike,
-    flux: npt.ArrayLike,
-    ivar: Optional[npt.ArrayLike] = None,
-    mask: Optional[npt.ArrayLike] = None,
-    flags: Optional[npt.ArrayLike] = None,
+    λ_out: jnp.array,
+    λ: jnp.array,
+    flux: jnp.array,
+    ivar: Optional[jnp.array] = None,
+    mask: Optional[jnp.array] = None,
+    flags: Optional[jnp.array] = None,
     censor_missing_regions: Optional[bool] = True,
     n_modes: Optional[int] = None,
-    lsqr_kwds: Optional[dict] = None,
-    finufft_kwds: Optional[float] = None,
-    **kwargs
+    rtol: Optional[float] = 1e-6,
+    atol: Optional[float] = 1e-6,
+    rcond: Optional[float] = None,
 ):
     """
     Combine spectra by forward modeling.
@@ -55,14 +52,18 @@ def frizzle(
         from the model will be reported (and have correspondingly large uncertainties) but this will produce unphysical features.
 
     :param n_modes: [optional]
-        The number of Fourier modes to use. If `None` is given then this will default to `len(λ_out)`. 
+        The number of Fourier modes to use. If `None` is given then this will default to `len(λ_out)`.
             
-    :param finufft_kwds: [optional]
-        Keyword arguments to pass to the `finufft.Plan()` constructor.
+    :param rtol: [optional]
+        The relative tolerance for the linear solver.
     
-    :param lsqr_kwds: [optional]
-        Keyword arguments to pass to the `scipy.sparse.linalg.lsqr()` function.
+    :param atol: [optional]
+        The absolute tolerance for the linear solver.
     
+    :param rcond: [optional]
+        Cut-off ratio for small singular values of the linear system. If `None` (default) the optimal value will be used
+        to reduce floating point errors.
+            
     :returns:
         A four-length tuple of ``(flux, ivar, flags, meta)`` where:
             - ``flux`` is the combined fluxes,
@@ -71,70 +72,92 @@ def frizzle(
             - ``meta`` is a dictionary.
     """
 
-    lsqr_kwds = ensure_dict(lsqr_kwds, calc_var=False)
-    finufft_kwds = ensure_dict(finufft_kwds)
-
     λ_out, λ, flux, ivar, mask = check_inputs(λ_out, λ, flux, ivar, mask)
 
-    n_modes = n_modes or len(λ_out)
-
-    λ_all = jnp.hstack([λ[~mask], λ_out])
-    λ_min, λ_max = (jnp.min(λ_all), jnp.max(λ_all))
-
-    small = kwargs.get("small", (λ_max - λ_min)/(1 + len(λ_out)))
-    scale = (1 - small) * 2 * jnp.pi / (λ_max - λ_min)
-    x = (λ[~mask] - λ_min) * scale
-    x_star = (λ_out - λ_min) * scale
-
-    C_inv_sqrt = jnp.sqrt(ivar[~mask])
-
-    A = JaxFinufft1DRealOperator(jnp.array(x), n_modes, **finufft_kwds)
-
-    A_w = Diagonal(C_inv_sqrt) @ A
-    Y_w = C_inv_sqrt * flux[~mask]
-
-    θ, *extras = lsqr(A_w, Y_w, **lsqr_kwds)
-    
-    keys = (
-        "istop", "itn", "r1norm", "r2norm", "anorm", "acond", "arnorm", 
-        "xnorm", "var"
+    y_star, C_inv_star, meta = _frizzle(
+        λ_out, λ[~mask], flux[~mask], ivar[~mask], 
+        n_modes or len(λ_out), 
+        rtol=rtol,
+        atol=atol,
+        rcond=rcond,
     )
-    meta = dict(zip(keys, extras))
-
-    A_star = JaxFinufft1DRealOperator(x_star, n_modes, **finufft_kwds)
-    #A_star.n_modes = np.atleast_1d(n_modes) # TODO
-    y_star = A_star @ θ
-    
-    nll = lambda θ: 0.5 * jnp.sum(ivar[~mask] * (A @ θ - flux[~mask])**2)
-    hess = hessian(nll)(θ)
-    I = jnp.eye(n_modes)
-
-    # When resampling a single epoch, you might have a bad time.
-    for rcond in [None, 1e-15, 1e-12, 1e-9, 1e-6]:
-        ATCinvA_inv, *extras = jnp.linalg.lstsq(hess, I, rcond=rcond)
-        if jnp.min(jnp.diag(ATCinvA_inv)) > 0:
-            break
-
-    if rcond is not None:
-        warnings.warn(f"Condition number of C is high, rcond={rcond:.2e}")
-
-    meta["rcond"] = rcond
-    C_inv_star = 1/jnp.diag(A_star @ (A_star @ ATCinvA_inv).T)
     
     if censor_missing_regions:
         # Set NaNs for regions where there were NO data.
         # Here we check to see if the closest input value was more than the output pixel width.
-        tree = KDTree(x.reshape((-1, 1)))
-        distances, indices = tree.query(x_star.reshape((-1, 1)), k=1)
+        tree = KDTree(λ.reshape((-1, 1)))
+        distances, indices = tree.query(λ_out.reshape((-1, 1)), k=1)
 
-        no_data = np.hstack([distances[:-1, 0] > np.diff(x_star), False])
+        no_data = jnp.hstack([distances[:-1, 0] > jnp.diff(λ_out), False])
         meta["no_data_mask"] = no_data
-        if np.any(no_data):
-            y_star = np.array(y_star) # TODO> keep things jaxed
-            C_inv_star = np.array(C_inv_star)
-            y_star[no_data] = np.nan
-            C_inv_star[no_data] = 0
-    
+        if jnp.any(no_data):
+            y_star = jnp.where(no_data, jnp.nan, y_star)
+            C_inv_star = jnp.where(no_data, 0, C_inv_star)
+
     flags_star = combine_flags(λ_out, λ, flags)
 
     return (y_star, C_inv_star, flags_star, meta)
+
+
+@partial(jax.jit, static_argnames=("n_modes", "rtol", "atol", "rcond"))
+def _frizzle(λ_out, λ, flux, ivar, n_modes, rtol, atol, rcond):
+
+    λ_all = jnp.hstack([λ, λ_out])
+    λ_min, λ_max = (jnp.min(λ_all), jnp.max(λ_all))
+
+    small = (λ_max - λ_min)/(1 + len(λ_out))
+    scale = (1 - small) * 2 * jnp.pi / (λ_max - λ_min)
+    x = (λ - λ_min) * scale
+    x_star = (λ_out - λ_min) * scale
+
+    C_inv_sqrt = jnp.sqrt(ivar)
+    
+    A_op = lx.FunctionLinearOperator(
+        lambda c: jnp.real(nufft2(_pre_matvec(c, n_modes), x)),
+        jax.ShapeDtypeStruct((n_modes, ), x.dtype)
+    )
+    C_inv_op = lx.DiagonalLinearOperator(C_inv_sqrt)
+
+    A_w = C_inv_op @ A_op
+    Y_w = C_inv_sqrt * flux
+
+    solver = lx.NormalCG(rtol=rtol, atol=atol)
+    solution = lx.linear_solve(A_w, Y_w, solver)
+
+    θ = solution.value
+    meta = dict(result=solution.result, **solution.stats)
+
+    A_star_op = lx.FunctionLinearOperator(
+        lambda c: jnp.real(nufft2(_pre_matvec(c, n_modes), x_star)),
+        jax.ShapeDtypeStruct((n_modes, ), x.dtype)
+    )
+
+    y_star = A_star_op.mv(θ)
+
+    nll = lambda θ: 0.5 * jnp.sum(ivar * (A_op.mv(θ) - flux)**2)
+    hess = jax.hessian(nll)(θ)
+    I = jnp.eye(n_modes)
+
+    ATCinvA_inv, resid, rank, s = jnp.linalg.lstsq(hess, I, rcond=rcond)
+
+    A_star_mm = jax.vmap(A_star_op.mv, in_axes=(0, ))
+    C_inv_star = 1/jnp.diag(A_star_mm(A_star_mm(ATCinvA_inv).T))
+
+    return (y_star, C_inv_star, meta)
+
+
+def _pre_matvec(c, p):
+    """
+    Enforce Hermitian symmetry on the Fourier coefficients.
+
+    :param c:
+        The Fourier coefficients (real-valued).
+    
+    :param p:
+        The number of modes.
+    """
+    f = (
+        0.5  * jnp.hstack([c[:p//2+1],   jnp.zeros(p-p//2-1)])
+    +   0.5j * jnp.hstack([jnp.zeros(p//2+1), c[p//2+1:]])
+    )
+    return f + jnp.conj(jnp.flip(f))
