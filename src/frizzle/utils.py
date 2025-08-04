@@ -17,13 +17,14 @@ def check_inputs(λ_out, λ, flux, ivar, mask):
         mask = np.hstack(mask).astype(bool)
     
     λ_out = np.array(λ_out)
-    # Mask things outside of the resampling range
-    mask *= ((λ_out[0] <= λ) * (λ <= λ_out[-1]))
+    # It is important to mask things outside of the resampling range
+    mask += (λ < λ_out[0]) | (λ > λ_out[-1])
 
     if ivar is None:
         ivar = np.ones_like(flux)
     else:
         ivar = np.hstack(ivar)    
+
     return (λ_out, λ, flux, ivar, mask)
 
 def separate_flags(flags: Optional[npt.ArrayLike] = None):

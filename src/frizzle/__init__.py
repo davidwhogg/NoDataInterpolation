@@ -1,4 +1,8 @@
 
+import jax
+
+jax.config.update("jax_enable_x64", True)
+
 import numpy as np
 import numpy.typing as npt
 import warnings
@@ -51,7 +55,7 @@ def frizzle(
         from the model will be reported (and have correspondingly large uncertainties) but this will produce unphysical features.
 
     :param n_modes: [optional]
-        The number of Fourier modes to use. If `None` is given then this will default to `len(λ_out)`.
+        The number of Fourier modes to use. If `None` is given then this will default to `len(λ_out)`. 
             
     :param finufft_kwds: [optional]
         Keyword arguments to pass to the `finufft.Plan()` constructor.
@@ -67,26 +71,28 @@ def frizzle(
             - ``meta`` is a dictionary.
     """
 
-    n_modes = n_modes or len(λ_out)
     lsqr_kwds = ensure_dict(lsqr_kwds, calc_var=False)
     finufft_kwds = ensure_dict(finufft_kwds)
 
     λ_out, λ, flux, ivar, mask = check_inputs(λ_out, λ, flux, ivar, mask)
 
+    n_modes = n_modes or len(λ_out)
+
     λ_all = jnp.hstack([λ[~mask], λ_out])
     λ_min, λ_max = (jnp.min(λ_all), jnp.max(λ_all))
 
-    small = kwargs.get("small", 1e-5)
+    small = kwargs.get("small", (λ_max - λ_min)/(1 + len(λ_out)))
     scale = (1 - small) * 2 * jnp.pi / (λ_max - λ_min)
     x = (λ[~mask] - λ_min) * scale
     x_star = (λ_out - λ_min) * scale
 
     C_inv_sqrt = jnp.sqrt(ivar[~mask])
 
-    A = JaxFinufft1DRealOperator(x, n_modes, **finufft_kwds)
+    A = JaxFinufft1DRealOperator(jnp.array(x), n_modes, **finufft_kwds)
 
     A_w = Diagonal(C_inv_sqrt) @ A
     Y_w = C_inv_sqrt * flux[~mask]
+
     θ, *extras = lsqr(A_w, Y_w, **lsqr_kwds)
     
     keys = (
@@ -96,25 +102,24 @@ def frizzle(
     meta = dict(zip(keys, extras))
 
     A_star = JaxFinufft1DRealOperator(x_star, n_modes, **finufft_kwds)
-    y_star = np.array(A_star @ θ)
+    #A_star.n_modes = np.atleast_1d(n_modes) # TODO
+    y_star = A_star @ θ
     
     nll = lambda θ: 0.5 * jnp.sum(ivar[~mask] * (A @ θ - flux[~mask])**2)
-    
     hess = hessian(nll)(θ)
     I = jnp.eye(n_modes)
 
     # When resampling a single epoch, you might have a bad time.
     for rcond in [None, 1e-15, 1e-12, 1e-9, 1e-6]:
-        C, *extras = jnp.linalg.lstsq(hess, I, rcond=rcond)
-        if jnp.min(jnp.diag(C)) > 0:
+        ATCinvA_inv, *extras = jnp.linalg.lstsq(hess, I, rcond=rcond)
+        if jnp.min(jnp.diag(ATCinvA_inv)) > 0:
             break
 
     if rcond is not None:
         warnings.warn(f"Condition number of C is high, rcond={rcond:.2e}")
 
     meta["rcond"] = rcond
-
-    C_inv_star = 1/np.diag(A_star @ (A_star @ C).T)
+    C_inv_star = 1/jnp.diag(A_star @ (A_star @ ATCinvA_inv).T)
     
     if censor_missing_regions:
         # Set NaNs for regions where there were NO data.
@@ -125,6 +130,8 @@ def frizzle(
         no_data = np.hstack([distances[:-1, 0] > np.diff(x_star), False])
         meta["no_data_mask"] = no_data
         if np.any(no_data):
+            y_star = np.array(y_star) # TODO> keep things jaxed
+            C_inv_star = np.array(C_inv_star)
             y_star[no_data] = np.nan
             C_inv_star[no_data] = 0
     
