@@ -2,14 +2,12 @@
 
 # frizzle 
 
-Combine spectra by forward modeling.
+Combine spectra by forward modeling [(Hogg & Casey, 20xx)](https://arxiv.org/abs/2403.11011).
 
 [![Test Status](https://github.com/andycasey/frizzle/actions/workflows/ci.yml/badge.svg)](https://github.com/andycasey/frizzle/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/andycasey/frizzle/badge.svg?branch=main&service=github)](https://coveralls.io/github/andycasey/frizzle?branch=main)
 
 </div>
-
-This is an implementation of `frizzle` as described in [Hogg & Casey (20xx)](https://arxiv.org/abs/2403.11011).
 
 # Install
 
