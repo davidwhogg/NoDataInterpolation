@@ -188,6 +188,7 @@ def make_one_dataset(dx, snr, N=8,
                                                profile_func, continuum_ivar)
         bs[j], ys[j] = badify(ys[j], badfrac)
     
+    # Make the inputs ragged?
     return xs, ys, y_ivars, bs, Delta_xs, (line_xs, line_ews, profile_func)
 
 
