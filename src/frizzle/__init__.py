@@ -4,6 +4,7 @@ import numpy as np
 from functools import partial
 from sklearn.neighbors import KDTree
 from typing import Optional
+from time import time
 
 from jax_finufft import nufft1, nufft2
 from .utils import check_inputs, combine_flags
@@ -100,27 +101,37 @@ def _frizzle_materialized(λ_out, λ, flux, ivar, n_modes):
     """
     frizzle some input spectra using materialized matrices.
     """
-
+    t = time()
     λ_min, λ_max = (λ_out[0], λ_out[-1])
 
     small = (λ_max - λ_min)/(1 + len(λ_out))
     scale = (1 - small) * 2 * jnp.pi / (λ_max - λ_min)
     x = (λ - λ_min) * scale 
     x_star = (λ_out - λ_min) * scale
-
     I = jnp.eye(n_modes)
+
+    t_setup, t = (time() - t, time())
     ATCinv = matmat(I, x, n_modes) * ivar
     ATCinvA = rmatmat(ATCinv, x, n_modes)
 
-    cho_factor = jax.scipy.linalg.cho_factor(ATCinvA)
-    θ = jax.scipy.linalg.cho_solve(cho_factor, ATCinv @ flux, check_finite=False)
-    ATCinvA_inv = jax.scipy.linalg.cho_solve(cho_factor, I, check_finite=False)
-
+    cho_factor = jax.scipy.linalg.cho_factor(ATCinvA)        
+    θ = jax.scipy.linalg.cho_solve(cho_factor, ATCinv @ flux)
     y_star = matvec(θ, x_star, n_modes)
-    A_star = matmat(I, x_star, n_modes)
-    C_inv_star = 1/jnp.diag(A_star @ ATCinvA_inv @ A_star.T)
-    return (y_star, C_inv_star, {})
-    
+    t_combined_flux, t = (time() - t, time())
+
+    ATCinvA_inv = jax.scipy.linalg.cho_solve(cho_factor, I)
+    A_star_T = matmat(I, x_star, n_modes)
+    C_inv_star = 1/jnp.diag(A_star_T.T @ ATCinvA_inv @ A_star_T)
+    t_combined_ivar = time() - t
+    meta = dict(
+        timing=dict(
+            t_setup=t_setup, 
+            t_combined_flux=t_combined_flux, 
+            t_combined_ivar=t_combined_ivar
+        ),
+    )
+    return (y_star, C_inv_star, meta)
+
 
 @partial(jax.jit, static_argnames=("p", ))
 def _pre_matvec(c, p):
