@@ -12,7 +12,7 @@ def check_inputs(λ_out, λ, flux, ivar, mask):
     else:
         mask = jnp.hstack(mask).astype(bool)
     
-    λ_out = jnp.array(λ_out)
+    λ_out = jnp.array(jnp.sort(λ_out))
     # It is important to mask things outside of the resampling range
     mask += (λ < λ_out[0]) | (λ > λ_out[-1])
 

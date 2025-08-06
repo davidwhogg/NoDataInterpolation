@@ -97,33 +97,28 @@ rmatmat = jax.vmap(rmatvec, in_axes=(0, None, None))
 
 @partial(jax.jit, static_argnames=("n_modes", ))
 def _frizzle_materialized(λ_out, λ, flux, ivar, n_modes):
+    """
+    frizzle some input spectra using materialized matrices.
+    """
 
-    λ_min, λ_max = (jnp.min(λ_out), jnp.max(λ_out))
+    λ_min, λ_max = (λ_out[0], λ_out[-1])
 
     small = (λ_max - λ_min)/(1 + len(λ_out))
     scale = (1 - small) * 2 * jnp.pi / (λ_max - λ_min)
-    x = (λ - λ_min) * scale
+    x = (λ - λ_min) * scale 
     x_star = (λ_out - λ_min) * scale
 
     I = jnp.eye(n_modes)
     ATCinv = matmat(I, x, n_modes) * ivar
     ATCinvA = rmatmat(ATCinv, x, n_modes)
-    L = jnp.linalg.cholesky(ATCinvA)
 
-    Y = ATCinv @ flux
-    θ = jax.scipy.linalg.solve_triangular(
-        L.T,
-        jax.scipy.linalg.solve_triangular(L, Y, lower=True),
-        lower=False
-    )
-    
+    cho_factor = jax.scipy.linalg.cho_factor(ATCinvA)
+    θ = jax.scipy.linalg.cho_solve(cho_factor, ATCinv @ flux, check_finite=False)
+    ATCinvA_inv = jax.scipy.linalg.cho_solve(cho_factor, I, check_finite=False)
+
     y_star = matvec(θ, x_star, n_modes)
-    ATCinvA_inv = jax.scipy.linalg.solve_triangular(
-        L.T, jax.scipy.linalg.solve_triangular(L, I, lower=True), lower=False
-    )
-    
-    C_inv_star = 1/jnp.diag(rmatmat(matmat(ATCinvA_inv, x_star, n_modes), x_star, n_modes))
-        
+    A_star = matmat(I, x_star, n_modes)
+    C_inv_star = 1/jnp.diag(A_star @ ATCinvA_inv @ A_star.T)
     return (y_star, C_inv_star, {})
     
 
