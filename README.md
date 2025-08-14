@@ -1,20 +1,33 @@
-# NoDataInterpolation
-advice to the spectroscopists
+<div align="Center">
 
-## Authors:
+# frizzle 
+
+Combine spectra by forward modeling [(Hogg & Casey, 20xx)](https://arxiv.org/abs/2403.11011).
+
+[![Test Status](https://github.com/andycasey/frizzle/actions/workflows/ci.yml/badge.svg)](https://github.com/andycasey/frizzle/actions/workflows/ci.yml)
+[![Coverage Status](https://coveralls.io/repos/github/andycasey/frizzle/badge.svg?branch=main&service=github)](https://coveralls.io/github/andycasey/frizzle?branch=main)
+
+</div>
+
+# Install
+
+```
+uv add frizzle
+```
+
+# Getting Started Guide
+
+[todo]
+
+# Authors
 - **David W Hogg** (NYU) (MPIA) (Flatiron)
-- **Andy Casey** (Monash)
+- **Andy Casey** (Monash) (Flatiron)
 
-## License:
-Copyright 2022 the authors.
-All code herein is licensed for reuse under the open-source *MIT License*.
-See the file `LICENSE` for more details.
 
-## Contributors / Acknowledgements:
-- **Matt Daunt** (NYU)
-- **Adrian Price-Whelan** (Flatiron)
-- The **Astronomical Data Group** at the Flatiron Institute.
+With contributions from:
+- **Matt Daunt** (NYU);
+- **Thomas Hilder** (Monash);
+- **Adrian Price-Whelan** (Flatiron);
+- the **Astronomical Data Group** at the Flatiron Institute; and 
+- the **Inference Group** at Monash University.
 
-## Projects:
-- Write a note for the astronomical community.
-- Release simple code or pseudo-code for the astronomical community.

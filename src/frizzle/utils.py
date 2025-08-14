@@ -1,30 +1,28 @@
+import jax.numpy as jnp
 import numpy as np
 import numpy.typing as npt
 from typing import Optional
 from sklearn.neighbors import KDTree
 
-def ensure_dict(d, **defaults):
-    kwds = dict()
-    kwds.update(defaults)
-    kwds.update(d or {})
-    return kwds
 
 def check_inputs(λ_out, λ, flux, ivar, mask):
-    λ, flux = map(np.hstack, (λ, flux))
+    λ, flux = map(jnp.hstack, (λ, flux))
     if mask is None:
-        mask = np.zeros(flux.size, dtype=bool)
+        mask = jnp.zeros(flux.size, dtype=bool)
     else:
-        mask = np.hstack(mask).astype(bool)
+        mask = jnp.hstack(mask).astype(bool)
     
-    λ_out = np.array(λ_out)
-    # Mask things outside of the resampling range
-    mask *= ((λ_out[0] <= λ) * (λ <= λ_out[-1]))
+    λ_out = jnp.array(jnp.sort(λ_out))
+    # It is important to mask things outside of the resampling range
+    mask += (λ < λ_out[0]) | (λ > λ_out[-1])
 
     if ivar is None:
-        ivar = np.ones_like(flux)
+        ivar = jnp.ones_like(flux)
     else:
-        ivar = np.hstack(ivar)    
+        ivar = jnp.hstack(ivar)
+
     return (λ_out, λ, flux, ivar, mask)
+
 
 def separate_flags(flags: Optional[npt.ArrayLike] = None):
     """
