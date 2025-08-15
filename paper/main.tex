@@ -81,7 +81,7 @@ The output can take the form of an image or spectrum evaluated on a pixel grid, 
 In addition to shifts, the model \modified{could be extended to} account for line-spread or point-spread function variations, world-coordinate-system variations, and calibration or normalization variations.
 The noise in the output becomes uncorrelated across neighboring pixels as the shifts deliver good coverage in some sense.
 The only cost is a small increase in computational complexity over that of traditional methods.
-We demonstrate the method with a small data example and we provide open-source sample code for re-use.
+We demonstrate the method with a small data example and we provide \modified{fast} open-source sample code for re-use.
 \end{abstract}
 
 \keywords{data analysis --- image processing --- spectroscopy --- statistics}
@@ -108,7 +108,7 @@ Of course we don't always think of a combined (or mosaiced) image of the sky or 
 It is just a simultaneous estimate of a lot of different components---a lot of different pixels---all the pixels in the combined image or spectrum.
 
 We are in a period in astrophysics in which exceedingly precise measurements are expected, in both imaging and spectroscopy projects.
-In spectroscopy, in particular, high signal-to-noise spectral measurements are expected to obtain surface-abundance measurements with precisions a few percent, and radial-velocity measurements with precisions of up to one ten-thousandth of a \emph{pixel} (in terms of the Doppler shift).
+In spectroscopy, in particular, high signal-to-noise spectral measurements are expected to obtain surface-abundance measurements with precisions of a few percent, and radial-velocity measurements with precisions of up to one ten-thousandth of a \emph{pixel} (in terms of the Doppler shift).
 Spectral combination methods that distort absorption (or emission) lines will translate into biases, errors, or increased variance in these measurements.
 Spectral combination methods that correlate the noise in the output combined spectrum will translate into increased variance, and necessitate more sophisticated downstream measurement techniques.
 
@@ -118,7 +118,7 @@ When we switch to a statistical-inference framework, we have to choose some form
 In what follows we use a maximally parameterized model, in the sense that we choose an expression for the functions or function space that has as many parameters as the output image has pixels.
 That means that the approach we take does not get its power from the choice of parameterized functions for the output:
 Indeed it has just as much freedom as the shifting-and-stacking standard practice.
-The forward-modeling we recommend gets its power from the fact that it generates the data directly and without manipulation, by means of a justifiable likelihood function.
+The forward-modeling we recommend gets its power from the fact that it generates the input data directly and without manipulation, by means of a justifiable likelihood function.
 
 A boundary condition of the work presented here is that the functional requirements of anything we provide must be the same as with standard practice:
 That is, we consider here only procedures that start with individual, single-epoch observations as inputs, along with noise estimates and bad-pixel masks; and we consider only procedures that end with an output ``combined image'' or ``combined spectrum'' that is a set of intensity or flux values on a pixel grid, along with uncertainty estimates and metadata flags.
@@ -130,7 +130,7 @@ Both of these results make our results good for subsequent precision measurement
 The approach we propose differs from interpolation-and-averaging in a subtle way. 
 Interpolation could be described as computing new values at arbitrary positions based on an existing set of known data points. 
 Instead, here we propose to construct a continuous spectral model for the data, such that we can evaluate that model on either the input (raw-data) pixel grid or else on the output (combined spectrum) pixel grid.
-The \emph{output product} is the same form as what one would expect from an interpolation-and-averaging procedure (values at a set of pixel positions), but the \emph{procedure} differs from interpolation. When interpolating the input data the basis functions are explicitly constructed from the input-data pixel grid, whereas here we construct a forward model that is maximally consistent with the data, and can be evaluated at any pixel locations.
+The \emph{output product} is the same form as what one would expect from an interpolation-and-averaging procedure (values at a set of pixel positions), but the \emph{procedure} differs from interpolation. When interpolating, the basis functions are explicitly constructed from the input-data pixel grid, whereas here we construct a forward model that is maximally consistent with the data, and can be evaluated at any pixel locations.
 
 The ideas here aren't novel; many projects have avoided data interpolation previously.
 For one example, the \textsl{COMBO-17} survey (\citealt{combo17}) took many images of the sky in many bands, and did not co-add the data prior to making measurements, in part to avoid mixing different point-spread functions and pixel samplings.
@@ -221,7 +221,7 @@ The simplest kind of model for a continuous function is a sum or mixture or line
 These could be sines and cosines for a Fourier series model.
 They could be spline (or sinc or Lanczos) cardinal basis functions.
 They could be wavelets.
-The point is that if we use a linear basis, and assume that noises are Gaussian, we will get closed-form expressions for the data combination\modified{, even if we do not require the basis to be orthogonal}.
+The point is that if we use a linear basis, and assume that noises are Gaussian, we will get closed-form expressions for the data combination\modified{, even if the basis is not orthogonal}.
 Thus we will make use of a linear basis.
 
 \paragraph{Band limit}
