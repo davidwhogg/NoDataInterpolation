@@ -276,7 +276,7 @@ We do not agree with this constraint or condition.
 The fundamental observable in a telescope\modified{'s detector} is intensity, or energy per area per solid angle per time per wavelength (or per frequency).
 This quantity is related to the phase-space density of photons.
 When the mapping between a pixel grid and the sky is changed, the expectation of the rate of photon arrivals per pixel will change (because the pixel effective solid angles change), but the expectation of the intensity will not change.
-\modified{Our position is that the spectra or images being combined make the same measurements at the detector surface, and the combined image should provide a good mean estimate of this intensity.}
+\modified{Our position is that the spectra or images being combined make measurements of the same intensity at the detector surface; the combined image should provide a good mean estimate of this intensity.}
 %Our position is that the key idea is not the conservation of flux or photons, but that the spectra or images being combined make the same measurements of the intensity (or similarly normalized or otherwise consistently calibrated measurements of intensity) at the detector surface.
 %The combined image should provide a good mean estimate of this intensity.
 
@@ -346,10 +346,9 @@ The uncertainty on the combined spectrum $y_\star$ can be estimated in a few way
 The information-theoretic answer is that the \modified{inverse covariance matrix $C_\star^{-1}$} delivering the uncertainties on $y_\star$ is
 \modified{
 \begin{align}
-    C_\star^{-1} &= X_\star\,(X^\top\,C^{-1}\,X)^{-1}\,X_\star^\top ~.\label{eq:outcovar}
+    C_\star^{-1} &= X_\star\,(X^\top\,C^{-1}\,X)\,X_\star^\top ~.\label{eq:outcovar}
 \end{align}
-}
-The naive uncertainty variances are the \modified{inverse} diagonals of this matrix.
+}The naive uncertainty variances are the \modified{inverse} diagonals of this matrix.
 But, \emph{very importantly}, this is only a correct usage when the input $C_i$ matrices really represented the true uncertainties going in.
 If you have any concerns about that, then it is way safer to get your uncertainty estimates from bootstrap or jackknife (for a related example, see \citealt{fittingflexible}).
 
@@ -389,8 +388,8 @@ We recommended setting $P=M_\star$.
 We recommend very strongly \emph{against} setting $P\approx M$, where $M=\sum_i M_i$.
 That is, you want the number of parameters to equal your number of output pixels, but you \emph{don't} want your number of parameters to be close to the number of \emph{input} pixels.
 The reason for this is the ``double descent'' phenomenon, which de-stabilizes linear fitting (\citealt{doubledescent}).
-\modified{In practice}
-If you find yourself in the situation that $M_\star\approx M$, reconsider your life choices.
+\modified{In practice if}
+you find yourself in the situation that $M_\star\approx M$, reconsider your life choices.
 
 \section{Experiments and results}\label{sec:results}
 
